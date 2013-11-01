@@ -52,7 +52,8 @@ GLubyte* load_image(const char* filename) {
   return buf;
 }
 
-void draw_image(ImageFormat format, GLubyte* data) {
+void draw_image(GLuint texture, ImageFormat format, GLubyte* data) {
+  glBindTexture(GL_TEXTURE_2D, texture);
   float index[] = {0.0, 1.0};
 
   glPixelStorei(GL_UNPACK_ALIGNMENT,1);
@@ -85,6 +86,54 @@ static void handle_sdl_events(){
    }
 }
 
+void draw_image_actual(GLuint texture, int width, int height) {
+  glBindTexture(GL_TEXTURE_2D,texture);
+   glColor3f(1.0f, 1.0f, 1.0f);
+   glBegin(GL_QUADS);
+   glTexCoord2f(0.0,1.0);
+   glVertex2f(0.0, 0.0);
+   glTexCoord2f(1.0,1.0);
+   glVertex2f(width, 0.0);
+   glTexCoord2f(1.0,0.0);
+   glVertex2f(width, height);
+   glTexCoord2f(0.0,0.0);
+   glVertex2f(0.0,  height);
+   glEnd();
+}
+
+static GLubyte smiley[] = /* 16x16 smiley face */
+{
+    0x03, 0xc0, /*       ****       */
+    0x0f, 0xf0, /*     ********     */
+    0x1e, 0x78, /*    ****  ****    */
+    0x39, 0x9c, /*   ***  **  ***   */
+    0x77, 0xee, /*  *** ****** ***  */
+    0x6f, 0xf6, /*  ** ******** **  */
+    0xff, 0xff, /* **************** */
+    0xff, 0xff, /* **************** */
+    0xff, 0xff, /* **************** */
+    0xff, 0xff, /* **************** */
+    0x73, 0xce, /*  ***  ****  ***  */
+    0x73, 0xce, /*  ***  ****  ***  */
+    0x3f, 0xfc, /*   ************   */
+    0x1f, 0xf8, /*    **********    */
+    0x0f, 0xf0, /*     ********     */
+    0x03, 0xc0  /*       ****       */
+};
+
+static void initGL(int w, int h) {
+  glViewport( 0, 0, w, h);
+
+  //Orthogonality setup
+  glMatrixMode( GL_PROJECTION );
+  glPushMatrix();
+  glLoadIdentity();
+  glOrtho( 0, w, 0, h, -1, 1 );
+
+  glMatrixMode( GL_MODELVIEW );
+  glPushMatrix();
+  glLoadIdentity();
+}
 
 int main ( int argc, char *argv[]){
   if (argc < 2) {
@@ -103,32 +152,24 @@ int main ( int argc, char *argv[]){
   char* filename = argv[2];
   GLubyte* image_data = load_image(filename);
 
-  int xresolution = 144;
-  int yresolution = 144;
+  int xresolution = 160;
+  int yresolution = 160;
 
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTTHREAD);
   SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 0 );
   SDL_SetVideoMode(xresolution, yresolution, 0, SDL_OPENGL);
 
-  glViewport( 0, 0, xresolution, yresolution );
+  initGL(xresolution, yresolution);
+  glEnable(GL_TEXTURE_2D);
 
-  //Orthogonality setup
-  glMatrixMode( GL_PROJECTION );
-  glPushMatrix();
-  glLoadIdentity();
-  glOrtho( 0, xresolution, 0, yresolution, -1, 1 );
-
-  glMatrixMode( GL_MODELVIEW );
-  glPushMatrix();
-  glLoadIdentity();
-
-  SDL_ShowCursor( 0 );
+  GLuint texture;
+  glGenTextures(1, &texture);
+  draw_image(texture, format, smiley);
 
   while(1){
     glClear( GL_COLOR_BUFFER_BIT );
 
-    draw_image(format, image_data);
-
+    draw_image_actual(texture, xresolution, yresolution);
     glFlush();
     glFinish();
     //SDL_GL_SwapBuffers();
