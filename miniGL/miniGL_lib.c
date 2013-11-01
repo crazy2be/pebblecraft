@@ -21,7 +21,6 @@
  */
 
 #include "miniGL.h"
-#include "miniGL_main.h"
 #include "miniGL_lib.h"
 
 /**

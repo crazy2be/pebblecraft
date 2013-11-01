@@ -8,8 +8,8 @@
 
 #include "fastmath.h"
 
-#define __HI32(x) *((u_int32_t *) &x)
-#define __LO32(x) *((u_int32_t *) &x + 1)
+#define __HI32(x) *((uint32_t *) &x)
+#define __LO32(x) *((uint32_t *) &x + 1)
 
 /* Get two 32 bit ints from a double.  */
 #define EXTRACT_WORDS(ix0,ix1,d) \
@@ -70,7 +70,7 @@ double Sqrt(double x) {
     double z;
     const int32_t sign = (int)0x80000000;
     int32_t ix0,s0,q,m,t,i;
-    u_int32_t r,t1,s1,ix1,q1;
+    uint32_t r,t1,s1,ix1,q1;
 
     EXTRACT_WORDS(ix0,ix1,x);   
 
@@ -145,9 +145,9 @@ double Sqrt(double x) {
 		z = one-tiny; /* trigger inexact flag */
 		if (z>=one) {
 			z = one+tiny;
-			if (q1==(u_int32_t)0xffffffff) { q1=0; q += 1;}
+			if (q1==(uint32_t)0xffffffff) { q1=0; q += 1;}
 			else if (z>one) {
-				if (q1==(u_int32_t)0xfffffffe) q+=1;
+				if (q1==(uint32_t)0xfffffffe) q+=1;
 				q1+=2;
 			} else
 				q1 += (q1&1);
@@ -344,7 +344,7 @@ int32_t __ieee754_rem_pio2(double x, double *y) {
     double z,w,t,r,fn;
     double tx[3];
     int32_t e0,i,j,nx,n,ix,hx;
-    u_int32_t low;
+    uint32_t low;
 
     GET_HIGH_WORD(hx,x);            /* high word of x */
     ix = hx&0x7fffffff;
@@ -384,7 +384,7 @@ int32_t __ieee754_rem_pio2(double x, double *y) {
 		if(n<32&&ix!=npio2_hw[n-1]) {
 			y[0] = r-w;     /* quick check no cancellation */
 		} else {
-			u_int32_t high;
+			uint32_t high;
 			j  = ix>>20;
 			y[0] = r-w;
 			GET_HIGH_WORD(high,y[0]);
@@ -605,7 +605,7 @@ recompute:
 }
 
 double __fabs(double x) {
-    u_int32_t high;
+    uint32_t high;
     GET_HIGH_WORD(high,x);
     SET_HIGH_WORD(x,high&0x7fffffff);
     return x;
@@ -644,7 +644,7 @@ double __scalbn (double x, int n) {
 
 double __floor(double x) {
     int32_t i0,i1,j0;
-    u_int32_t i,j;
+    uint32_t i,j;
     EXTRACT_WORDS(i0,i1,x);
     j0 = ((i0>>20)&0x7ff)-0x3ff;
     if(j0<20) {
@@ -666,7 +666,7 @@ double __floor(double x) {
 		if(j0==0x400) return x+x;   /* inf or NaN */
 		else return x;              /* x is integral */
     } else {
-		i = ((u_int32_t)(0xffffffff))>>(j0-20);
+		i = ((uint32_t)(0xffffffff))>>(j0-20);
 		if((i1&i)==0) return x;     /* x is integral */
 		if(huge+x>0.0) {            /* raise inexact flag */
 			if(i0<0) {
@@ -685,7 +685,7 @@ double __floor(double x) {
 }                                  
 
 double __copysign(double x, double y) {
-    u_int32_t hx,hy;
+    uint32_t hx,hy;
     GET_HIGH_WORD(hx,x);
     GET_HIGH_WORD(hy,y);
     SET_HIGH_WORD(x,(hx&0x7fffffff)|(hy&0x80000000));
@@ -728,7 +728,7 @@ double Atan(double x) {
     GET_HIGH_WORD(hx,x);
     ix = hx&0x7fffffff;
     if(ix>=0x44100000) {    /* if |x| >= 2^66 */
-		u_int32_t low;
+		uint32_t low;
 		GET_LOW_WORD(low,x);
 		if(ix>0x7ff00000||
                 (ix==0x7ff00000&&(low!=0)))

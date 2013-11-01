@@ -27,10 +27,9 @@
 #define W 1
 #define EPSILON 0.02
 
-#include "miniGL.h"
-#include "miniGL_main.h"
 #include "miniGL_lib.h"
 #include "fastgraph.h"
+#include "fastmath.h"
 #include <stdint.h>
 
 typedef float fixed;
@@ -332,7 +331,7 @@ void glOrtho(GLdouble left, GLdouble right,
  */
 void gluOrtho2D(GLdouble left, GLdouble right, GLdouble bottom,
 		GLdouble top) {
-	glOrtho(miniGLLibRef, left, right, bottom, top, -1, 1);
+	glOrtho(left, right, bottom, top, -1, 1);
 }
 
 /**
@@ -420,11 +419,6 @@ int BackFacing(int l, int m, int n) {
 	GLfloat *q0;
 	GLfloat *q1;
 	GLfloat *q2;
-	const fixed c00;
-	const fixed c01;
-	const fixed c10;
-	const fixed c11;
-
 
 	q0 = (scr_vertices)[l];
 	q1 = (scr_vertices)[m];
@@ -434,10 +428,10 @@ int BackFacing(int l, int m, int n) {
 	/*VectorMinusVector(q1, q0, c0);
 	VectorMinusVector(q2, q0, c1);*/
 	/** Reduce size to keep from overflowing (/8) */
-	c00 = (DTF(q1[0]) - DTF(q0[0]))/8;
-	c01 = (DTF(q1[1]) - DTF(q0[1]))/8;
-	c10 = (DTF(q2[0]) - DTF(q0[0]))/8;
-	c11 = (DTF(q2[1]) - DTF(q0[1]))/8;
+	const fixed c00 = (DTF(q1[0]) - DTF(q0[0]))/8;
+	const fixed c01 = (DTF(q1[1]) - DTF(q0[1]))/8;
+	const fixed c10 = (DTF(q2[0]) - DTF(q0[0]))/8;
+	const fixed c11 = (DTF(q2[1]) - DTF(q0[1]))/8;
 	/** Partial cross product replaces VectorCrossVector */ 	
 	
 
@@ -950,7 +944,7 @@ void glEnd(void) {
  * drawn primitives.  Only copies the area as set in WinSetGLArea(...).
  */
 void glutSwapBuffers(void) {
-	glFlush(miniGLLibRef);
+	glFlush();
 }
 
 /**
@@ -1031,7 +1025,7 @@ void glVertex3f(GLfloat x, GLfloat y, GLfloat z) {
  *
  */
 void glVertex2f(GLfloat x, GLfloat y) {
-        glVertex3f(miniGLLibRef, x, y, 0.0);
+        glVertex3f(x, y, 0.0);
 }
 
 /**
@@ -1074,7 +1068,7 @@ void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) {
                 t[15] = 1;
         }
 
-        glMultMatrixf(miniGLLibRef,t);
+        glMultMatrixf(t);
 }
 
 /**
@@ -1097,7 +1091,7 @@ void glScalef(GLfloat x, GLfloat y, GLfloat z) {
 	t[5] = y;
 	t[10] = z;
 
-	glMultMatrixf(miniGLLibRef, t);
+	glMultMatrixf(t);
 
 }
 

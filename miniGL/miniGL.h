@@ -146,6 +146,13 @@ typedef unsigned long GLbitfield;
 typedef unsigned long GLenum;
 typedef void GLvoid;
 
+typedef struct RGBColorType {
+  uint8_t pad;
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+} RGBColorType;
+
 /**
  * Data structures
  */

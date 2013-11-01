@@ -10,8 +10,7 @@
 #ifndef FASTMATH_H
 #define FASTMATH_H
 
-typedef long int32_t;
-typedef unsigned long u_int32_t; 
+#include <stdint.h>
 
 double Sqrt(double x);
 float Sin(float x);
