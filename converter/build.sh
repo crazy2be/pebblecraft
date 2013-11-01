@@ -1,3 +1,3 @@
 #!/bin/bash
 
-g++ main.c rgb-renderbuf.c -o converter.bin
+gcc main.c rgb-renderbuf.c -o converter.bin -std=c99

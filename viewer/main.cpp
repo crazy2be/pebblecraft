@@ -44,6 +44,20 @@ GLubyte* load_image(const char* filename) {
   return buf;
 }
 
+GLubyte* make_texture_data(ImageFormat format, ImageData data) {
+  int n = format == Grey1 ? 8 : 2;
+  int len = data.width * data.height;
+  GLubyte* rgb = (GLubyte*)malloc(len * 3 + 1);
+  GLubyte* grey = data.buf;
+  for (int i = 0; i < len; i++) {
+    int s = 7 - i%n; // shift
+    rgb[i*3  ] = 255 * ((grey[i / n] & (1 << s))>>s);
+    rgb[i*3+1] = 255 * ((grey[i / n] & (1 << s))>>s);
+    rgb[i*3+2] = 255 * ((grey[i / n] & (1 << s))>>s);
+  }
+  return rgb;
+}
+
 GLuint load_texture(ImageFormat format, ImageData data) {
   GLuint texture;
   glGenTextures(1, &texture);
@@ -58,27 +72,13 @@ GLuint load_texture(ImageFormat format, ImageData data) {
     12.0/15.0, 13.0/15.0, 14.0/15.0, 15.0/15.0,
   };
 
-  glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+  GLubyte* texture_data = make_texture_data(format, data);
 
-  if (format == Grey1) {
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_R, 2, index2);
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_G, 2, index2);
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_B, 2, index2);
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_A, 2, index2);
-  } else if (format == Grey4) {
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_R, 16, index16);
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_G, 16, index16);
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_B, 16, index16);
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_A, 16, index16);
-  } else {
-    printf("Invalid image format!\n");
-    exit(1);
-  }
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, data.width, data.height,
+               0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
 
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,data.width,data.height,0,GL_COLOR_INDEX,GL_BITMAP,data.buf);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
   return texture;
 }
@@ -173,7 +173,7 @@ ImageFormat read_format(const char* str) {
 
 ImageData read_image(const char* name) {
   ImageData data;
-  if (strcmp(name, "smile")) {
+  if (strcmp(name, "smile") == 0) {
     data.buf = smiley;
     data.width = 16;
     data.height = 16;
