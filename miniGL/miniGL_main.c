@@ -24,7 +24,6 @@
 #define W 1
 #define EPSILON 0.02
 
-#include <SysAll.h>
 #include "miniGL.h"
 #include "miniGL_main.h"
 #include "miniGL_lib.h"
