@@ -1,0 +1,37 @@
+miniGL v0.3 Build Schedule
+http://www.dsbox.com/minigl.html
+
+March 5-11:
+
+	Integrate new math functions to avoid linking to MathLib external
+	library.  Use new implementations of sin(), cos(), atan(), and
+	sqrt().  
+
+	Add specular component to illumination model.  Support GL_SPECULAR
+	token in glLightfv(...) to set light color and specular exponent.
+
+	Clean up floodfill routine to get rid of slope rounding error when
+	m is shallow in y direction.
+
+	Add support for all 8 lights instead of just for GL_LIGHT0 as in the
+	current hack.
+
+	Tie in GL_FLAT to actually be set by glShadeModel() call, with 
+	GL_SMOOTH not supported at this time until Phong shading is 
+	implemented.
+
+	glMaterialfv(...) implemented and used with lighting model.
+
+	Z-buffer implementation used during floodfill routine to draw 
+	overlapping polygons.  Note:  memory hog.  Perhaps implement
+	only a scan line Z-buffer at constant screen y.
+
+	v0.3 release on March 11, 2000.
+
+October 2000:
+
+	v0.4b release on 10.19.00.
+
+	Plan to test with a more robust test rig beyond just a cube
+	or simple primitive.  Need to get things working smoothly.
+	Stability is the key this month...

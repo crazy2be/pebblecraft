@@ -1,0 +1,56 @@
+
+miniGL
+http://www.dsbox.com/minigl.html
+http://sourceforge.net/project/?group_id=3404
+ 
+(c) 2000 Digital Sandbox, Inc.
+Released under the LGPL
+03.10.00           
+
+
+INTRODUCTION
+------------
+
+The goal of the miniGL project is to allow for easy porting of 3D
+OpenGL code to the Palm platform. While the color-rendering abilities
+of the Palm OS are limited, the general geometry transformations and
+wireframe rendering functions are to be supported. The miniGL library
+seeks to achieve full OpenGL 1.1 compatibility (at least in the sense
+that you can compile it; many functions will simply be stubs due to
+Palm limitations). There is one supplied function external to the
+GL-spec which specifies where in the 160x160 Palm window you
+desire the rendering context to appear (WinSetGLArea), so you can
+have the GL window within a larger form layout.
+
+Please see http://www.dsbox.com/minigl.html for more information and 
+updates, as well as the test rig program.  Source and release can be
+obtained on the project page at http://sourceforge.net/project/?group_id=3404
+
+
+FILES
+-----
+
+CHANGELOG     - Changes from version to version
+COPYING       - LGPL license text
+Makefile      - Makefile for library
+README        - This file
+INSTALL	      - Installation/compilation
+SCHEDULE      - Build schedule for upcoming releases
+fastmath.c    - Fast mathematics code from MathLib
+fastmath.h    - Header for fast mathematics code from MathLib 
+fastgraph.c   - Fast graphics drawing routines
+fastgraph.h   - Header for fast graphics routines
+miniGL_main.c - Main code base
+miniGL_main.h - Header file for main code
+miniGL_lib.c  - Shared library code (open, close, etc)
+miniGL_lib.h  - Header for library code
+miniGL.c      - Stub function code for MiniGL
+miniGL.h      - Header for miniGL code  
+
+
+COMPILATION
+-----------
+
+You should just be able to type "make" if everything is set up on your
+machine as it is on mine ;-).  See the "INSTALL" file for more info.
+

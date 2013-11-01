@@ -1,0 +1,36 @@
+
+miniGL ChangeLog
+
+v0.1:
+
+Initial source release.  Includes most basic gl rendering fucntions.
+At least enough to render a cube on the screen.
+
+v0.2:
+
+Added double-buffering support and a glutSwapBuffers() call.  Added 
+glEnable(GL_CULL_FACE) support to cull backfacing polys.  Added initial 
+greyscale support.  Lighting model support and initial calls to 
+glLightfv(...) to add up to 8 lights.
+
+v0.4a:
+
+Changed to shared lib.  Only need the following files for compiling the
+lib now:
+
+	miniGL.h
+	minigl_main.{c,h}
+	fastmath.{c,h}
+	fastgraph.{c,h}
+
+The miniGL.h file should be included in any app that is to use miniGL,
+and the libminigl.sa shared lib should be linked in.
+
+v0.4b (10.19.00): 
+
+Changed to a REAL shared lib, a la MathLib.  You should use the 
+miniGL.h and miniGL.c files compiled into your own app that is
+to use miniGL, then install your app and the miniGLLib.prc file
+onto the Palm device.  This is a new and better way of doing
+shared libs.  Trust me.
+
