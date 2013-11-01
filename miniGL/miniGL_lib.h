@@ -26,60 +26,39 @@
 #include "fastgraph.h"
 
 /**
- * Dispatch table declaration
- */
-ULong install_dispatcher(UInt refNum, SysLibTblEntryPtr entryP);
-Ptr *gettable(void);
-
-/**
  * The global structure for this library
  */
-typedef struct miniGLLib_globals {
-	UInt refcount;
+UInt refcount;
 
-	float modv_matrix[MAX_MAT_STACK_MODV][16]; 
-	char  modv_level;
-	float proj_matrix[MAX_MAT_STACK_PROJ][16]; 
-	char  proj_level;
+float modv_matrix[MAX_MAT_STACK_MODV][16]; 
+char  modv_level;
+float proj_matrix[MAX_MAT_STACK_PROJ][16]; 
+char  proj_level;
 
-	GLfloat cur_matrix[16];
-	GLfloat per_matrix[16];
-	GLfloat scr_matrix[16]; 
-	GLfloat cur_color[4];
-	GLfloat cur_normal[4];
-	GLfloat vertices_color[MAX_VERTICES][4];
-	GLfloat vertices_normal[MAX_VERTICES][4];
-	GLfloat vertices[MAX_VERTICES][4];
-	GLfloat scr_vertices[MAX_VERTICES][3];
-	int num_vertices;
-	int screen_width;
-	int screen_height;
-	int culling;
-	int screen_startx;
-	int screen_starty;
-	int two_created;
-	int lighting;
-	int wireframe;
-	int greyscale_mode;
-	GLenum cur_mode;
-	GLenum matrix_mode;
-	Light lights[8];
+GLfloat cur_matrix[16];
+GLfloat per_matrix[16];
+GLfloat scr_matrix[16]; 
+GLfloat cur_color[4];
+GLfloat cur_normal[4];
+GLfloat vertices_color[MAX_VERTICES][4];
+GLfloat vertices_normal[MAX_VERTICES][4];
+GLfloat vertices[MAX_VERTICES][4];
+GLfloat scr_vertices[MAX_VERTICES][3];
+int num_vertices;
+int screen_width;
+int screen_height;
+int culling;
+int screen_startx;
+int screen_starty;
+int two_created;
+int lighting;
+int wireframe;
+int greyscale_mode;
+GLenum cur_mode;
+GLenum matrix_mode;
+Light lights[8];
 
-	WinHandle one;
-	WinHandle two; 
-	WinStruct win;
 
-} miniGLLib_globals;
-
-typedef miniGLLib_globals* miniGLLib_globalsPtr;
-
-/**
- * Global variable access function prototypes
- */
-miniGLLib_globalsPtr miniGLAllocGlobals(UInt refNum);
-miniGLLib_globalsPtr miniGLLockGlobals(UInt refNum);
-Err miniGLFreeGlobals(UInt refNum);
-Err miniGLUnlockGlobals(miniGLLib_globalsPtr gP);
 
 #endif
 

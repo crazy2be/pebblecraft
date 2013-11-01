@@ -20,7 +20,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <SysAll.h>
 #include "miniGL.h"
 
 /** Library reference returned by SysLibFind() or SysLibLoad() */
