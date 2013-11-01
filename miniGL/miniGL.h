@@ -27,13 +27,18 @@
 #define LibType			'libr'
 #define miniGLLibCreator	'MnGL'
 
+#include <stdint.h>
+#include <stddef.h>
+
 typedef enum tagminiGLErrNum {
 	miniGLErrNone		=  0,
 	miniGLErrParam		= -1,
 	miniGLErrNoGlobals	= -2
 } miniGLErr;
 
-extern UInt miniGLLibRef;
+typedef int Err;
+
+extern uint32_t miniGLLibRef;
 
 #define MAX_SCREEN_WIDTH        160
 #define MAX_SCREEN_HEIGHT       160
@@ -179,109 +184,7 @@ typedef struct VertexStruct {
 /**
  * Library controls functions
  */
-Err miniGLLibOpen(UInt refNum)
-	SYS_TRAP(sysLibTrapOpen);
-Err miniGLLibClose(UInt refNum, UIntPtr numappsP)
-	SYS_TRAP(sysLibTrapClose);
-Err miniGLLibSleep(UInt refNum)
-	SYS_TRAP(sysLibTrapSleep);
-Err miniGLLIbWake(UInt refNum)
-	SYS_TRAP(sysLibTrapWake);
-
-/**
- * GL implementation library functions in the OS systrap format
- */
-Err MultMatrixf(UInt refNum, const GLfloat *m) 
-	SYS_TRAP(sysLibTrapCustom);
-Err LoadMatrixf(UInt refNum, const GLfloat *m)
-	SYS_TRAP(sysLibTrapCustom+1);
-Err LoadIdentity(UInt refNum)
-	SYS_TRAP(sysLibTrapCustom+2);
-Err ClearColor(UInt refNum, GLclampf red, GLclampf green, GLclampf blue,
-	GLclampf alpha)
-	SYS_TRAP(sysLibTrapCustom+3);
-Err Clear(UInt refNum, GLbitfield mask)
-	SYS_TRAP(sysLibTrapCustom+4);
-Err Color3f(UInt refNum, GLfloat r, GLfloat g, GLfloat b)
-	SYS_TRAP(sysLibTrapCustom+5);
-Err Color4f(UInt refNum, GLfloat r, GLfloat g, GLfloat b, GLfloat a)
-	SYS_TRAP(sysLibTrapCustom+6);
-Err Ortho(UInt refNum, GLdouble left, GLdouble right, GLdouble bottom,
-	GLdouble top, GLdouble near, GLdouble distant)
-	SYS_TRAP(sysLibTrapCustom+7);
-Err Ortho2D(UInt refNum, GLdouble left, GLdouble right, GLdouble bottom, 
-	GLdouble top) 
-	SYS_TRAP(sysLibTrapCustom+8);
-Err Viewport(UInt refNum, GLint x, GLint y, GLsizei width, GLsizei height)
-	SYS_TRAP(sysLibTrapCustom+9);
-Err Perspective(UInt refNum, GLdouble fovy, GLdouble aspect, GLdouble near,
-	GLdouble distant)
-	SYS_TRAP(sysLibTrapCustom+10);
-Err Begin(UInt refNum, GLenum mode)
-	SYS_TRAP(sysLibTrapCustom+11);
-Err End(UInt refNum)
-	SYS_TRAP(sysLibTrapCustom+12);
-Err Flush(UInt refNum)
-	SYS_TRAP(sysLibTrapCustom+13);
-Err Vertex2f(UInt refNum, GLfloat x, GLfloat y)
-	SYS_TRAP(sysLibTrapCustom+14);
-Err Vertex3f(UInt refNum, GLfloat x, GLfloat y, GLfloat z)
-	SYS_TRAP(sysLibTrapCustom+15);
-Err ShadeModel(UInt refNum, GLenum mode)
-	SYS_TRAP(sysLibTrapCustom+16);
-Err Rotatef(UInt refNum, GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
-	SYS_TRAP(sysLibTrapCustom+17);
-Err Scalef(UInt refNum, GLfloat x, GLfloat y, GLfloat z)
-	SYS_TRAP(sysLibTrapCustom+18);
-Err Translatef(UInt refNum, GLfloat x, GLfloat y, GLfloat z)
-	SYS_TRAP(sysLibTrapCustom+19);
-Err PopMatrix(UInt refNum)
-	SYS_TRAP(sysLibTrapCustom+20);
-Err PushMatrix(UInt refNum)
-	SYS_TRAP(sysLibTrapCustom+21);
-Err MatrixMode(UInt refNum, GLenum mode)
-	SYS_TRAP(sysLibTrapCustom+22);
-Err Normal3f(UInt refNum, GLfloat nx, GLfloat ny, GLfloat nz)
-	SYS_TRAP(sysLibTrapCustom+23);
-Err Enable(UInt refNum, GLenum cap)
-	SYS_TRAP(sysLibTrapCustom+24);
-Err Disable(UInt refNum, GLenum cap)
-	SYS_TRAP(sysLibTrapCustom+25);
-Err Lightfv(UInt refNum, GLenum light, GLenum pname, const GLfloat *params)
-	SYS_TRAP(sysLibTrapCustom+26);
-Err GetLightfv(UInt refNum, GLenum light, GLenum pname, GLfloat *params)
-	SYS_TRAP(sysLibTrapCustom+27);
-Err PolygonMode(UInt refNum, GLenum face, GLenum mode)
-	SYS_TRAP(sysLibTrapCustom+28);
-Err Map2f(UInt refNum, GLenum target, GLfloat u1, GLfloat u2, GLint ustride, 
-	GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder,
-	const GLfloat *points)
-	SYS_TRAP(sysLibTrapCustom+29);
-Err MapGrid2f(UInt refNum, GLint un, GLfloat u1, GLfloat u2, GLint vn,
-	GLfloat v1, GLfloat v2 )
-	SYS_TRAP(sysLibTrapCustom+30);
-Err EvalMesh2(UInt refNum, GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2 )
-	SYS_TRAP(sysLibTrapCustom+31);
-Err PushAttrib(UInt refNum, GLbitfield mask )
-	SYS_TRAP(sysLibTrapCustom+32);
-Err PopAttrib(UInt refNum)
-	SYS_TRAP(sysLibTrapCustom+33);
-Err DrawPixels(UInt refNum, GLsizei width, GLsizei height, GLenum format,
-	GLenum type, const GLvoid *pixels)
-	SYS_TRAP(sysLibTrapCustom+34);
-Err Bitmap(UInt refNum, GLsizei width, GLsizei height, GLfloat xbo, GLfloat ybo,
-	GLfloat xbi, GLfloat ybi, const GLubyte *bitmap)
-	SYS_TRAP(sysLibTrapCustom+35);
-
-/**
- * Extra non-GL functions 
- */
-Err SetGLArea(UInt refNum, int x1, int y1, int x2, int y2)
-	SYS_TRAP(sysLibTrapCustom+36);
-Err RemoveGLArea(UInt refNum)
-	SYS_TRAP(sysLibTrapCustom+37);
-Err SwapBuffers(UInt refNum)
-	SYS_TRAP(sysLibTrapCustom+38);
+void miniGL_init(void);
 
 /**
  * Calls that the calling program will actually make 
@@ -329,8 +232,6 @@ void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type,
         const GLvoid *pixels);
 void glBitmap(GLsizei width, GLsizei height, GLfloat xbo, GLfloat ybo,
         GLfloat xbi, GLfloat ybi, const GLubyte *bitmap);
-void WinSetGLArea(int x1, int y1, int x2, int y2);
-void WinRemoveGLArea();
 void glutSwapBuffers();
 
 #endif

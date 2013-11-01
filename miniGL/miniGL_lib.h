@@ -28,7 +28,7 @@
 /**
  * The global structure for this library
  */
-UInt refcount;
+uint32_t refcount;
 
 float modv_matrix[MAX_MAT_STACK_MODV][16]; 
 char  modv_level;

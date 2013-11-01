@@ -636,7 +636,7 @@ double __scalbn (double x, int n) {
     if (k <= -54)
 		if (n > 50000)      /* in case integer overflow in n+k */
 			return huge*__copysign(huge,x); /*overflow*/
-		else return tiny*__copysign(tiny,x);        /*underflow*/
+    else return tiny*__copysign(tiny,x);        /*underflow*/
     k += 54;                                /* subnormal result */
     SET_HIGH_WORD(x,(hx&0x800fffff)|(k<<20));
     return x*twom54;
