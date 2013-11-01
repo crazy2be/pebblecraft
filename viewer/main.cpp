@@ -1,24 +1,16 @@
 #include <GL/gl.h>
 #include <SDL/SDL.h>
 
-#include <math.h>
-#define DEG2RAD 3.14159/180.0
-static void draw_hallow_circle( float size, float x, float y ){
-   float angle = 0.0f;
-   float radius = size;
-   float degInRad = 0.0f;
-   glBegin(GL_LINE_LOOP);
-   for (angle=0; angle < 360.0f; angle += 1.0f){
-      degInRad = angle*DEG2RAD;
-      glVertex2f(sin(degInRad)*radius + x,cos(degInRad)*radius + y);
-   }
-   glEnd();
-}
-
 enum ImageFormat {
   Grey4,
   Grey1,
 };
+
+typedef struct {
+  int width;
+  int height;
+  GLubyte* buf;
+} ImageData;
 
 GLubyte* load_image(const char* filename) {
   FILE* fp = fopen(filename, "r");
@@ -52,7 +44,10 @@ GLubyte* load_image(const char* filename) {
   return buf;
 }
 
-void draw_image(GLuint texture, ImageFormat format, GLubyte* data) {
+GLuint load_texture(ImageFormat format, ImageData data) {
+  GLuint texture;
+  glGenTextures(1, &texture);
+
   glBindTexture(GL_TEXTURE_2D, texture);
   float index[] = {0.0, 1.0};
 
@@ -63,15 +58,36 @@ void draw_image(GLuint texture, ImageFormat format, GLubyte* data) {
   glPixelMapfv(GL_PIXEL_MAP_I_TO_B, 2, index);
   glPixelMapfv(GL_PIXEL_MAP_I_TO_A, 2, index);
 
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,16,16,0,GL_COLOR_INDEX,GL_BITMAP,data);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,data.width,data.height,0,GL_COLOR_INDEX,GL_BITMAP,data.buf);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  return texture;
+}
+
+void draw_texture(GLuint texture, int width, int height) {
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glColor3f(1.0f, 1.0f, 1.0f);
+  glBegin(GL_QUADS);
+  glTexCoord2f(0.0  , 1.0);
+  glVertex2f  (0.0  , 0.0);
+
+  glTexCoord2f(1.0  , 1.0);
+  glVertex2f  (width, 0.0);
+
+  glTexCoord2f(1.0  , 0.0);
+  glVertex2f  (width, height);
+
+  glTexCoord2f(0.0  , 0.0);
+  glVertex2f  (0.0  , height);
+
+  glEnd();
 }
 
 static void handle_sdl_events(){
    SDL_Event sdlevent;
-   if(SDL_PeepEvents(&sdlevent,1,SDL_GETEVENT, 
+   if (SDL_PeepEvents(&sdlevent,1,SDL_GETEVENT,
             SDL_ALLEVENTS//Handle all events, else event queue full
             ) == 1){
       switch( sdlevent.type ) {
@@ -84,21 +100,6 @@ static void handle_sdl_events(){
          break;
       }
    }
-}
-
-void draw_image_actual(GLuint texture, int width, int height) {
-  glBindTexture(GL_TEXTURE_2D,texture);
-   glColor3f(1.0f, 1.0f, 1.0f);
-   glBegin(GL_QUADS);
-   glTexCoord2f(0.0,1.0);
-   glVertex2f(0.0, 0.0);
-   glTexCoord2f(1.0,1.0);
-   glVertex2f(width, 0.0);
-   glTexCoord2f(1.0,0.0);
-   glVertex2f(width, height);
-   glTexCoord2f(0.0,0.0);
-   glVertex2f(0.0,  height);
-   glEnd();
 }
 
 static GLubyte smiley[] = /* 16x16 smiley face */
@@ -122,6 +123,10 @@ static GLubyte smiley[] = /* 16x16 smiley face */
 };
 
 static void initGL(int w, int h) {
+  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTTHREAD);
+  SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 0 );
+  SDL_SetVideoMode(w, h, 0, SDL_OPENGL);
+
   glViewport( 0, 0, w, h);
 
   //Orthogonality setup
@@ -133,6 +138,35 @@ static void initGL(int w, int h) {
   glMatrixMode( GL_MODELVIEW );
   glPushMatrix();
   glLoadIdentity();
+
+  glEnable(GL_TEXTURE_2D);
+}
+
+ImageFormat read_format(const char* str) {
+  ImageFormat format;
+  if (strcmp(str, "grey4")) {
+    return Grey4;
+  } else if (strcmp(str, "grey1")) {
+    return Grey1;
+  } else {
+    printf("Invalid format %s", str);
+    exit(1);
+  }
+}
+
+ImageData read_image(const char* name) {
+  ImageData data;
+  if (strcmp(name, "smile")) {
+    data.buf = smiley;
+    data.width = 16;
+    data.height = 16;
+  } else {
+    data.buf = load_image(name);
+    data.width = 144;
+    data.height = 144;
+  }
+  if (!data.buf) exit(1);
+  return data;
 }
 
 int main ( int argc, char *argv[]){
@@ -140,39 +174,23 @@ int main ( int argc, char *argv[]){
     printf("Usage: viewer <grey4|grey1> <filename>\n");
     return 1;
   }
-  ImageFormat format;
-  if (strcmp(argv[1], "grey4")) {
-    format = Grey4;
-  } else if (strcmp(argv[1], "grey1")) {
-    format = Grey1;
-  } else {
-    printf("Invalid format %s", argv[1]);
-    return 1;
-  }
-  char* filename = argv[2];
-  GLubyte* image_data = load_image(filename);
+  ImageFormat format = read_format(argv[1]);
+  ImageData data = read_image(argv[2]);
 
-  int xresolution = 160;
-  int yresolution = 160;
+  int screen_width = 144;
+  int screen_height = 144;
 
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTTHREAD);
-  SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 0 );
-  SDL_SetVideoMode(xresolution, yresolution, 0, SDL_OPENGL);
+  initGL(screen_width, screen_height);
 
-  initGL(xresolution, yresolution);
-  glEnable(GL_TEXTURE_2D);
+  GLuint texture = load_texture(format, data);
 
-  GLuint texture;
-  glGenTextures(1, &texture);
-  draw_image(texture, format, smiley);
-
-  while(1){
+  while (1) {
     glClear( GL_COLOR_BUFFER_BIT );
 
-    draw_image_actual(texture, xresolution, yresolution);
+    draw_texture(texture, screen_width, screen_height);
+
     glFlush();
     glFinish();
-    //SDL_GL_SwapBuffers();
     handle_sdl_events();
   }
 
