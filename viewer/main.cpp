@@ -2,8 +2,8 @@
 #include <SDL/SDL.h>
 
 enum ImageFormat {
-  Grey4,
   Grey1,
+  Grey4,
 };
 
 typedef struct {
@@ -49,14 +49,31 @@ GLuint load_texture(ImageFormat format, ImageData data) {
   glGenTextures(1, &texture);
 
   glBindTexture(GL_TEXTURE_2D, texture);
-  float index[] = {0.0, 1.0};
+
+  float index2[] = {0.0, 1.0};
+  float index16[] = {
+    0.0 /15.0, 1.0 /15.0, 2.0 /15.0, 3.0 /15.0,
+    4.0 /15.0, 5.0 /15.0, 6.0 /15.0, 7.0 /15.0,
+    8.0 /15.0, 9.0 /15.0, 10.0/15.0, 11.0/15.0,
+    12.0/15.0, 13.0/15.0, 14.0/15.0, 15.0/15.0,
+  };
 
   glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 
-  glPixelMapfv(GL_PIXEL_MAP_I_TO_R, 2, index);
-  glPixelMapfv(GL_PIXEL_MAP_I_TO_G, 2, index);
-  glPixelMapfv(GL_PIXEL_MAP_I_TO_B, 2, index);
-  glPixelMapfv(GL_PIXEL_MAP_I_TO_A, 2, index);
+  if (format == Grey1) {
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_R, 2, index2);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_G, 2, index2);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_B, 2, index2);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_A, 2, index2);
+  } else if (format == Grey4) {
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_R, 16, index16);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_G, 16, index16);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_B, 16, index16);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_A, 16, index16);
+  } else {
+    printf("Invalid image format!\n");
+    exit(1);
+  }
 
   glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,data.width,data.height,0,GL_COLOR_INDEX,GL_BITMAP,data.buf);
 
@@ -144,9 +161,9 @@ static void initGL(int w, int h) {
 
 ImageFormat read_format(const char* str) {
   ImageFormat format;
-  if (strcmp(str, "grey4")) {
+  if (strcmp(str, "grey4") == 0) {
     return Grey4;
-  } else if (strcmp(str, "grey1")) {
+  } else if (strcmp(str, "grey1") == 0) {
     return Grey1;
   } else {
     printf("Invalid format %s", str);
@@ -176,6 +193,8 @@ int main ( int argc, char *argv[]){
   }
   ImageFormat format = read_format(argv[1]);
   ImageData data = read_image(argv[2]);
+  printf("Format: %d\n", format);
+  fflush(stdout);
 
   int screen_width = 144;
   int screen_height = 144;
@@ -196,5 +215,3 @@ int main ( int argc, char *argv[]){
 
   return 0;
 }
-
-
