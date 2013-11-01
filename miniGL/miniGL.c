@@ -589,16 +589,16 @@ void glEnd(void) {
 			end[4];
 	RGBColorType color1, color2;
 	Line I, II;
-	char foo[20], bar[20];
 
 
 	if (num_vertices < 2)
 		return;
 
-	StrCopy(foo, "num_vertices = ");
-	StrIToA(bar, num_vertices);
-	StrCat(foo, bar);
-	ErrFatalDisplayIf(true, foo);
+	//char foo[20], bar[20];
+	//StrCopy(foo, "num_vertices = ");
+	//StrIToA(bar, num_vertices);
+	//StrCat(foo, bar);
+	//ErrFatalDisplayIf(true, foo);
 
 	/** Translate vertices to screen coords */
 	for(i=0; i < num_vertices; i++) {
@@ -951,7 +951,6 @@ void glutSwapBuffers(void) {
  * For now does the same as glutSwapBuffers() above.
  */
 void glFlush(void) {
-	RectangleType rect;
 	RGBColorType color1, color2;
 
 
@@ -962,14 +961,6 @@ void glFlush(void) {
 	int fps;
 	int framecount;
 	char text[30];
-#endif
-
-	rect.topLeft.x = screen_startx;
-	rect.topLeft.y = screen_starty;
-	rect.extent.x = screen_width;
-	rect.extent.y = screen_height;
-
-#ifdef PRINT_FPS
 	/** Don't count time spent swapping buffers now. */
 	t = TimGetTicks();
 #endif
@@ -1197,6 +1188,7 @@ void glMatrixMode(GLenum mode) {
 			//cur_matrix = proj_matrix[proj_level];
 			break;
 		default:
+      break;
 			//cur_matrix = NULL;
 	}
 
