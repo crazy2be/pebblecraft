@@ -60,7 +60,7 @@ int main(int argc, char* argv[]){
 
   int rcount = 1;
 #ifdef SDL
-  rcount = 5;
+  rcount = 50;
 #endif
 
 for(int i = 0; i < rcount ; i ++){
