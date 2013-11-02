@@ -2,6 +2,7 @@
 *~
 .kateproject.d
 *.kate-swp
+*.lock*
 
 # Object files
 *.o
