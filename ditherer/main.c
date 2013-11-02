@@ -3,8 +3,8 @@
 
 #define byte unsigned char
 
-char extract_grey(byte* grey, int i) {
-  char val;
+byte extract_grey(byte* grey, int i) {
+  byte val;
   if (i%2 == 1) {
     val = (grey[i/2] & 0x0F) << 4;
   } else {
@@ -13,20 +13,58 @@ char extract_grey(byte* grey, int i) {
   return val | (val >> 4);
 }
 
+// Note: low bits are ignored.
+void set_grey(byte* grey, int i, byte val) {
+  if (i%2 == 1) {
+    grey[i/2] = (grey[i/2] & 0xF0) | (val >> 4);
+  } else {
+    grey[i/2] = (grey[i/2] & 0x0F) | (val & 0xF0);
+  }
+}
+
+void add_grey(byte* grey, int i, byte amount) {
+  byte val = extract_grey(grey, i);
+  set_grey(grey, i, val + amount);
+}
+
 void set_black(byte* bw, int i) {
   bw[i/8] |= 1 << (7 - i%8);
 }
 void set_white(byte* bw, int i) {
   bw[i/8] &= ~(1 << (7 - i%8));
 }
+void set_bw(byte* bw, int i, byte val) {
+  if (val > 127) {
+    set_black(bw, i);
+  } else {
+    set_white(bw, i);
+  }
+}
 
-void naive_dither(byte* grey_data, byte* bw_buf, int num_pixels) {
+void naive_dither(byte* grey, byte* bw, int num_pixels) {
   for (int i = 0; i < num_pixels; i++) {
-    byte grey = extract_grey(grey_data, i);
-    if (grey > 127) {
-      set_black(bw_buf, i);
-    } else {
-      set_white(bw_buf, i);
+    set_bw(bw, i, extract_grey(grey, i));
+  }
+}
+
+int index(int x, int y) {
+  return x*144 + y;
+}
+
+// WARNING: Modifies grey buffer
+void floyd_steinberg_dither(byte* grey, byte* bw, int num_pixels) {
+  int w = 144;
+  int h = 144;
+  for (int x = 0; x < w; x++) {
+    for (int y = 0; y < h; y++) {
+      int g = extract_grey(grey, index(x, y));
+      int n = g > 127 ? 255 : 0;
+      int error = g - n;
+      add_grey(grey, index(x+1, y  ), (7 * error) / 16);
+      add_grey(grey, index(x-1, y+1), (3 * error) / 16);
+      add_grey(grey, index(x  , y+1), (5 * error) / 16);
+      add_grey(grey, index(x+1, y+1), (1 * error) / 16);
+      set_bw(bw, index(x, y), n);
     }
   }
 }
@@ -92,7 +130,7 @@ int main(int argc, char** argv) {
   int num_pixels = 144*144;
   byte* in = load_image(argv[1]);
   byte* out = (byte*)malloc(num_pixels/8);
-  naive_dither(in, out, num_pixels);
+  floyd_steinberg_dither(in, out, num_pixels);
   save_image("dithered.bin", out, num_pixels/8);
   return 0;
 }

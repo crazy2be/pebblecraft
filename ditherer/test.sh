@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 ./build.sh
 ./ditherer.bin ../converter/dump.bin
