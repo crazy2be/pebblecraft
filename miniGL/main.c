@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
 
   glDisable(GL_LIGHTING);
   glDisable(GL_CULL_FACE);
-  glPolygonMode(GL_FRONT, GL_LINE);
+  glPolygonMode(GL_FRONT, GL_FILL);
 
   //glTranslatef( -(xpos+width/2.0f), -(ypos+height/2.0f),0.0f );
 

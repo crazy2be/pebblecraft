@@ -43,11 +43,14 @@ static uint8_t current_color = 0x00; //Default to black
   v0 ^= v1; \
 
 #define DRAW_PIXEL( x0, y0 ) \
-  if( CHECK_CLIP(x0,y0)){ int pixelpos = (y0*MAX_SCREEN_WIDTH + x0) / 2; \
-  framebuffer[ pixelpos ] = \
-  (x0%2) ? \
-    (current_color << 4) | (framebuffer[ pixelpos ]  & 0x0F) : \
-    (framebuffer[ pixelpos ] & 0xF0) | current_color; }
+  if (CHECK_CLIP(x0,y0)) { \
+    int i = (y0*MAX_SCREEN_WIDTH + x0) / 2; \
+    if (x0 % 2 == 1) {\
+      framebuffer[i] = (framebuffer[i] & 0xF0) | (current_color & 0x0F); \
+    } else {\
+      framebuffer[i] = (framebuffer[i] & 0x0F) | ((current_color & 0x0F) << 4);\
+    }\
+  }
 
 
 
