@@ -22,9 +22,13 @@ void set_grey(byte* grey, int i, byte val) {
   }
 }
 
-void add_grey(byte* grey, int i, byte amount) {
+int clamp(int n, int a, int b) {
+  return n < a ? a : n > b ? b : n;
+}
+
+void add_grey(byte* grey, int i, int amount) {
   byte val = extract_grey(grey, i);
-  set_grey(grey, i, val + amount);
+  set_grey(grey, i, clamp(val + amount, 0, 255));
 }
 
 void set_black(byte* bw, int i) {
@@ -55,16 +59,16 @@ int index(int x, int y) {
 void floyd_steinberg_dither(byte* grey, byte* bw, int num_pixels) {
   int w = 144;
   int h = 144;
-  for (int x = 0; x < w; x++) {
-    for (int y = 0; y < h; y++) {
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
       int g = extract_grey(grey, index(x, y));
       int n = g > 127 ? 255 : 0;
+      set_bw(bw, index(x, y), n);
       int error = g - n;
       add_grey(grey, index(x+1, y  ), (7 * error) / 16);
       add_grey(grey, index(x-1, y+1), (3 * error) / 16);
       add_grey(grey, index(x  , y+1), (5 * error) / 16);
       add_grey(grey, index(x+1, y+1), (1 * error) / 16);
-      set_bw(bw, index(x, y), n);
     }
   }
 }
