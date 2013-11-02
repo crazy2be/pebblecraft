@@ -45,15 +45,22 @@ GLubyte* load_image(const char* filename) {
 }
 
 GLubyte* make_texture_data(ImageFormat format, ImageData data) {
-  int n = format == Grey1 ? 8 : 2;
   int len = data.width * data.height;
   GLubyte* rgb = (GLubyte*)malloc(len * 3 + 1);
   GLubyte* grey = data.buf;
-  for (int i = 0; i < len; i++) {
-    int s = 7 - i%n; // shift
-    rgb[i*3  ] = 255 * ((grey[i / n] & (1 << s))>>s);
-    rgb[i*3+1] = 255 * ((grey[i / n] & (1 << s))>>s);
-    rgb[i*3+2] = 255 * ((grey[i / n] & (1 << s))>>s);
+  if (format == Grey1) {
+    for (int i = 0; i < len; i++) {
+      int s = 7 - i%8; // shift
+      rgb[i*3  ] = 255 * ((grey[i / 8] & (1 << s))>>s);
+      rgb[i*3+1] = 255 * ((grey[i / 8] & (1 << s))>>s);
+      rgb[i*3+2] = 255 * ((grey[i / 8] & (1 << s))>>s);
+    }
+  } else if (format == Grey4) {
+    for (int i = 0; i < len; i++) {
+      rgb[i*3    ] = grey[i/2];
+      rgb[i*3 + 1] = grey[i/2];
+      rgb[i*3 + 2] = grey[i/2];
+    }
   }
   return rgb;
 }
