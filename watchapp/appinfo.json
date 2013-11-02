@@ -1,0 +1,17 @@
+{
+  "uuid": "844d4455-c167-49b8-8258-dea579e62400",
+  "shortName": "Template App",
+  "longName": "Pebble Template App",
+  "companyName": "Your Company",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}
