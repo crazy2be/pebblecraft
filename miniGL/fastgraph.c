@@ -118,7 +118,7 @@ void fgDrawLine(int x0, int y0, int x1, int y1) {
  */
 void fgSetColor(int r, int g, int b) {
   //current_color = (r+r+r+b+g+g+g+g)>>3; //Fast Luminosity 8-bit
-  current_color = (r+r+r+b+g+g+g+g)>>4; //Fast Luminosity 4-bit
+  current_color = (r+r+r+b+g+g+g+g)>>6; //Fast Luminosity 4-bit
   printf("fgSetColor:%d\n",current_color);
 }
 
