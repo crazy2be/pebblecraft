@@ -13,7 +13,7 @@ static inline int min(int a, int b) {
 
 // http://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color
 static inline byte luma(byte r, byte g, byte b) {
-  return (r+r+b+g+g+g)/7;
+  return ((r+b+g)/3);
 }
 // Grey buf is two pixels per byte. All lengths refer to length
 // in bytes.

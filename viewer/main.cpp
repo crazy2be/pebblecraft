@@ -48,19 +48,22 @@ GLubyte* make_texture_data(ImageFormat format, ImageData data) {
   int len = data.width * data.height;
   GLubyte* rgb = (GLubyte*)malloc(len * 3 + 1);
   GLubyte* grey = data.buf;
-  if (format == Grey1) {
-    for (int i = 0; i < len; i++) {
-      int s = 7 - i%8; // shift
-      rgb[i*3  ] = 255 * ((grey[i / 8] & (1 << s))>>s);
-      rgb[i*3+1] = 255 * ((grey[i / 8] & (1 << s))>>s);
-      rgb[i*3+2] = 255 * ((grey[i / 8] & (1 << s))>>s);
+  for (int i = 0; i < len; i++) {
+    int val;
+    if (format == Grey1) {
+      int s = (7 - i%8) * 1;
+      val = 255 * ((grey[i/8] & (1 << s)) >> s);
+    } else if (format == Grey4) {
+      if (i%2 == 1) {
+        val = (grey[i/2] & 0x0F) << 4;
+      } else {
+        val = (grey[i/2] & 0xF0);
+      }
     }
-  } else if (format == Grey4) {
-    for (int i = 0; i < len; i++) {
-      rgb[i*3    ] = grey[i/2];
-      rgb[i*3 + 1] = grey[i/2];
-      rgb[i*3 + 2] = grey[i/2];
-    }
+    val = val | val >> 4;
+    rgb[i*3    ] = val;
+    rgb[i*3 + 1] = val;
+    rgb[i*3 + 2] = val;
   }
   return rgb;
 }
@@ -70,14 +73,6 @@ GLuint load_texture(ImageFormat format, ImageData data) {
   glGenTextures(1, &texture);
 
   glBindTexture(GL_TEXTURE_2D, texture);
-
-  float index2[] = {0.0, 1.0};
-  float index16[] = {
-    0.0 /15.0, 1.0 /15.0, 2.0 /15.0, 3.0 /15.0,
-    4.0 /15.0, 5.0 /15.0, 6.0 /15.0, 7.0 /15.0,
-    8.0 /15.0, 9.0 /15.0, 10.0/15.0, 11.0/15.0,
-    12.0/15.0, 13.0/15.0, 14.0/15.0, 15.0/15.0,
-  };
 
   GLubyte* texture_data = make_texture_data(format, data);
 
