@@ -10,7 +10,7 @@ GRect bounds;
 uint16_t frame = 0;
 uint8_t* model_buf = NULL;
 
-extern uint8_t framebuffer[144*144 / 2];
+extern uint8_t framebuffer[144*168 / 2];
 static void register_timer(void* data);
 uint32_t frame_count = 0;
 
@@ -44,6 +44,7 @@ static void window_unload(Window *window) {}
 
 static void init(void) {
   window = window_create();
+  window_set_fullscreen(window, true);
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
     .unload = window_unload,

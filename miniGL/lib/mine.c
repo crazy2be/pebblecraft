@@ -15,12 +15,12 @@
 #endif
 
 void gl_init() {
-  glViewport(0,0,144,144);
+  glViewport(0,0,144,168);
 
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
 
-  glOrtho(-74, 74, -74, 74, -144, 30.0);
+  glOrtho(-72, 72, -84, 84, -144, 30.0);
 
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();

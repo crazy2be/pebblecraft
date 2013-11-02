@@ -32,7 +32,7 @@
 
 
 #define MAX_SCREEN_WIDTH	144
-#define MAX_SCREEN_HEIGHT	144
+#define MAX_SCREEN_HEIGHT	168
 
 //4-bit grayscale, only need support in framebuffer and draw_pixel
 uint8_t framebuffer[MAX_SCREEN_WIDTH * MAX_SCREEN_HEIGHT / 2];
