@@ -20,7 +20,7 @@ void gl_init() {
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
 
-#if 1
+#if 0
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_CULL_FACE);
@@ -46,8 +46,9 @@ void gl_init() {
 
 void gl_drawframe(uint8_t* model) {
   int triangle_count = *(int*)&model[80];
-  glClearColor(0.0,0.0,0.0,0.0);
+  glClearColor(1.0, 1.0, 1.0, 1.0);
   glClear(GL_COLOR);
+//   glRotatef(10,0,1,0);
   for (int i = 0; i < triangle_count; i++){
     struct stl_data stl =
       *(struct stl_data*)&model[80 + 4 + i*sizeof(struct stl_data)];
@@ -55,19 +56,19 @@ void gl_drawframe(uint8_t* model) {
     float green = ( ( stl.color & 0x03E0 ) >> 5 ) / 31.0;
     float blue  = ( ( stl.color & 0x7C00 ) >> 10) / 31.0;
 
-    printf("stl[%i]: red:%f green:%f blue:%f \n",i,red,green,blue);
-    printf("normal( %f, %f, %f )\n",
-      stl.normal[0], stl.normal[1], stl.normal[2]);
-    printf(
-      "vertex1( %f ,%f ,%f )\n"
-      "vertex2( %f ,%f ,%f )\n"
-      "vertex3( %f ,%f ,%f )\n",
-      stl.vertex1[0],stl.vertex1[1],stl.vertex1[2],
-      stl.vertex2[0],stl.vertex2[1],stl.vertex2[2],
-      stl.vertex3[0],stl.vertex3[1],stl.vertex3[2]);
+//     printf("stl[%i]: red:%f green:%f blue:%f \n",i,red,green,blue);
+//     printf("normal( %f, %f, %f )\n",
+//       stl.normal[0], stl.normal[1], stl.normal[2]);
+//     printf(
+//       "vertex1( %f ,%f ,%f )\n"
+//       "vertex2( %f ,%f ,%f )\n"
+//       "vertex3( %f ,%f ,%f )\n",
+//       stl.vertex1[0],stl.vertex1[1],stl.vertex1[2],
+//       stl.vertex2[0],stl.vertex2[1],stl.vertex2[2],
+//       stl.vertex3[0],stl.vertex3[1],stl.vertex3[2]);
 
     //glColor3f(red,green,blue);
-    glColor3f(0.9,0.9,0.9);
+    glColor3f(0.0, 0.0, 0.0);
     glBegin(GL_POLYGON);
     glNormal3f(stl.normal[0],stl.normal[1],stl.normal[2]);
     glVertex3f(stl.vertex1[0], stl.vertex1[1], stl.vertex1[2]);
@@ -76,5 +77,5 @@ void gl_drawframe(uint8_t* model) {
     glEnd();
   }
   glFlush();
-  glClear(GL_COLOR);
+//   glClear(GL_COLOR);
 }

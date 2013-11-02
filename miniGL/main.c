@@ -42,6 +42,30 @@ unsigned char* load_model() {
   return model;
 }
 
+extern uint8_t framebuffer[144*144/2];
+
+void save_image(const char* filename, unsigned char* data, int len) {
+  FILE* fp = fopen(filename, "wb");
+  if (fp == NULL) {
+    printf("ERROR opening file %s\n", filename);
+    return;
+  }
+  int written = fwrite(data, len, 1, fp);
+  if (written != 1) {
+    printf("ERROR writing to file %s. Wrote %d bytes of %d total\n", filename, written, len);
+    return;
+  }
+  if (fflush(fp) != 0) {
+    printf("ERROR flushing file %s\n", filename);
+    return;
+  }
+  if (fclose(fp) != 0) {
+    printf("ERROR closing file %s\n", filename);
+    return;
+  }
+}
+
+
 int main(int argc, char* argv[]){
 
   int xpos = 0;
@@ -58,7 +82,7 @@ int main(int argc, char* argv[]){
 
   unsigned char* model = load_model();
 
-  int rcount = 1;
+  int rcount = 2;
 #ifdef SDL
   rcount = 5;
 #endif
@@ -66,6 +90,16 @@ int main(int argc, char* argv[]){
 for(int i = 0; i < rcount ; i ++){
   glRotatef(10,0,1,0);
   gl_drawframe(model);
+
+  //lets dump the framebuffer to file
+  static int framecount = 0;
+  static int filecount = 0;
+  char filename[32];
+  sprintf(filename,"fb_%03d.gray4bit",filecount);
+  save_image(filename, framebuffer, sizeof(framebuffer));
+  filecount++;
+  framecount++;
+
 #ifdef SDL
   sleep(1);
 #endif
