@@ -42,7 +42,11 @@ unsigned char* load_model() {
   return model;
 }
 
-extern uint8_t framebuffer[144*144/2];
+#ifdef SDL
+  uint8_t framebuffer[144*144/2];
+#else
+  extern uint8_t framebuffer[144*144/2];
+#endif
 
 void save_image(const char* filename, unsigned char* data, int len) {
   FILE* fp = fopen(filename, "wb");
