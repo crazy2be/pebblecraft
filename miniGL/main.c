@@ -1,6 +1,6 @@
 
 #ifndef SDL
-  #include "miniGL.h"
+  #include "lib/miniGL.h"
   #define GL_COLOR_BUFFER_BIT GL_COLOR
 #else
   #include <GL/gl.h>

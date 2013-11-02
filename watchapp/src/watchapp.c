@@ -1,30 +1,18 @@
 #include <pebble.h>
+#include "dither.h"
 
 static Window *window;
 
 GRect bounds;
 
-typedef struct GContext {
-  GBitmap dest_bitmap;
-} MyGContext;
-
 uint16_t frame = 0;
+uint8_t* grey_buffer = NULL;
 
 static void render_opengl(Layer* layer, GContext *ctx) {
-  MyGContext* c = (MyGContext*)ctx;
-  uint32_t* data = (uint32_t*)c->dest_bitmap.addr;
+  GBitmap* bitmap = (GBitmap*)ctx;
+  uint32_t* data = (uint32_t*)bitmap->addr;
 
-  int16_t w = bounds.size.w/32 + 1;
-  int16_t h = bounds.size.h;
-
-  for (int y = 0; y < h; y++) {
-    for (int x = 0; x < w; x++) {
-      data[y*w + x] = (uint32_t)y;
-    }
-  }
-  frame++;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "%d %d %d", w, h, frame);
-  layer_mark_dirty(layer);
+  floyd_steinberg_dither(grey_buffer, (uint8_t*)data, -1);
 }
 
 static void window_load(Window *window) {
@@ -43,6 +31,12 @@ static void init(void) {
   });
   const bool animated = true;
   window_stack_push(window, animated);
+
+  ResHandle handle = resource_get_handle(RESOURCE_ID_SOMETHING_USUALLY_ALL_CAPITALS);
+  size_t len = resource_size(handle);
+  uint8_t* buf = malloc(len);
+  resource_load(handle, buf, len);
+  grey_buffer = buf;
 }
 
 static void deinit(void) {
