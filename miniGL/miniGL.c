@@ -100,12 +100,26 @@ GLfloat VectorDotVector(const GLfloat *v1, const GLfloat *v2) {
 	return answer;
 }
 
+float fastInvSqrt(float x)
+{
+	float xhalf = 0.5f*x;
+	union
+	{
+		float x;
+		int i;
+	} u;
+	u.x = x;
+	u.i = 0x5f3759df - (u.i >> 1);
+	x = u.x * (1.5f - xhalf * u.x * u.x);
+	return x;
+}
+
 void VectorNormalize(GLfloat *v) {
 	float l_sqr = v[0]*v[0] +
 		v[1]*v[1] +
 		v[2]*v[2] +
 		v[3]*v[3];
-	float l_inv = 1/Sqrt(l_sqr);
+	float l_inv = fastInvSqrt(l_sqr);//1/Sqrt(l_sqr);
 
 	v[0] = v[0]*l_inv;
 	v[1] = v[1]*l_inv;
@@ -210,7 +224,8 @@ void glLoadIdentity(void) {
 /**
  * Doesn't do anything right now since there are no colors.
  */
-void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) {
+void glClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
+  fgClearColor(red*255,green*255,blue*255);
 }
 
 /**
@@ -260,10 +275,10 @@ void glClear(GLbitfield mask) {
  */
 void glColor3f(GLfloat r, GLfloat g, GLfloat b) {
 
-	cur_color[0] = r;
-	cur_color[1] = g;
-	cur_color[2] = b;
-	cur_color[3] = 1.0;
+	cur_color[0] = r*255;
+	cur_color[1] = g*255;
+	cur_color[2] = b*255;
+	cur_color[3] = 255;
 
 	fgSetColor(r*255,g*255,b*255);
 }
@@ -278,10 +293,10 @@ void glColor3f(GLfloat r, GLfloat g, GLfloat b) {
  */
 void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 
-	cur_color[0] = r;
-	cur_color[1] = g;
-	cur_color[2] = b;
-	cur_color[3] = a;
+	cur_color[0] = r*255;
+	cur_color[1] = g*255;
+	cur_color[2] = b*255;
+	cur_color[3] = a*255;
 
 	fgSetColor(r*255,g*255,b*255);
 }
@@ -446,9 +461,8 @@ int BackFacing(int l, int m, int n) {
 
 void DoLightingCalc(GLfloat pos[4], GLfloat normal[4], 
 				RGBColorType *color1) {
-	GLfloat blaa[4];
-	GLfloat cosangle;
-	int i;
+	GLfloat blaa[4] = {0.0,0.0,0.0,0.0};
+	GLfloat cosangle = 0.0f;
 
 
 	if (!lighting) {
@@ -459,15 +473,23 @@ void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
 
 		return;
 	}
+
 	
-	for (i=0;i<8;i++) { /** Go through all eight lights */
+	for (int i=0;i<8;i++) { /** Go through all eight lights */
 		if (lights[i].enabled == 0)
-			break;
+			continue;
 
 		VectorMinusVector(lights[i].position,
 				pos, blaa);
+
+    printf("normal(%f,%f,%f,%f)\nblaa(%f,%f,%f,%f)\n",
+      normal[0], normal[1], normal[2], normal[3], 
+      blaa[0], blaa[1], blaa[2], blaa[3]);
 		VectorNormalize(normal);
 		VectorNormalize(blaa);
+    printf("normal(%f,%f,%f,%f)\nblaa(%f,%f,%f,%f)\n",
+      normal[0], normal[1], normal[2], normal[3], 
+      blaa[0], blaa[1], blaa[2], blaa[3]);
 		cosangle = VectorDotVector(normal, blaa);
 		if (cosangle < 0) {
 			color1->r = cur_color[0] 
@@ -490,6 +512,9 @@ void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
 				  + (lights[i].diffuse[2]
 				  * cosangle));
 		}
+    printf("light_r:%d light_g:%d light_b:%d\n",color1->r,color1->g,color1->b);
+    printf(" ambient:%f diffuse:%f cosangle:%f\n",
+      lights[0].ambient[0], lights[0].diffuse[0], cosangle);
 	}
 
 }
@@ -560,7 +585,7 @@ void DrawScanLine(GLfloat *start, GLfloat *end, GLfloat *startnormal,
 void SetColor() {
 
 
-	fgSetColor(cur_color[0]*255, cur_color[1]*255, cur_color[2]*255);
+	fgSetColor(cur_color[0], cur_color[1], cur_color[2]);
 
 }
 
@@ -821,8 +846,10 @@ void glEnd(void) {
 
 			if (!wireframe) {
 			/** lighting calculation to get color */
-			//DoLightingCalc(vertices[0], normal, &color1);
-			//fgSetColor(color1.r, color1.g, color1.b);
+      if(lighting){
+			  DoLightingCalc(vertices[0], normal, &color1);
+			  fgSetColor(color1.r*255, color1.g*255, color1.b*255);
+      }
 
 			/** find "highest" and "lowest" points in y dir */
 			oldtopy = -1000;
