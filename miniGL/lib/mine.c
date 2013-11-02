@@ -20,7 +20,7 @@ void gl_init() {
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
 
-#if 0
+#if 1
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_CULL_FACE);
@@ -37,24 +37,27 @@ void gl_init() {
   glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
 
 #else
-  //gluPerspective(40, 1.0, 20.0, 100.0);
+//   gluPerspective(40, 1.0, 20.0, 100.0);
   glDisable(GL_LIGHTING);
   glEnable(GL_CULL_FACE);
-  glPolygonMode(GL_FRONT, GL_FILL);
+  glPolygonMode(GL_FRONT, GL_LINE);
 #endif
 }
 
 void gl_drawframe(uint8_t* model) {
+  static float vx = 0, vy = 0, vz = 0;
   int triangle_count = *(int*)&model[80];
-  glClearColor(1.0, 1.0, 1.0, 1.0);
+  glClearColor(0.0, 0.0, 0.0, 0.0);
   glClear(GL_COLOR);
-//   glRotatef(10,0,1,0);
+  vx += (float)(rand() % 100)/10.0;
+  vy += (float)(rand() % 100)/10.0;
+  vz += (float)(rand() % 100)/10.0;
+  glRotatef(10.0, 1.0, 1.0, 1.0);
   for (int i = 0; i < triangle_count; i++){
-    struct stl_data stl =
-      *(struct stl_data*)&model[80 + 4 + i*sizeof(struct stl_data)];
-    float red   = (   stl.color & 0x001F )        / 31.0;
-    float green = ( ( stl.color & 0x03E0 ) >> 5 ) / 31.0;
-    float blue  = ( ( stl.color & 0x7C00 ) >> 10) / 31.0;
+    struct stl_data stl = *(struct stl_data*)&model[80 + 4 + i*sizeof(stl)];
+//     float red   = (   stl.color & 0x001F )        / 31.0;
+//     float green = ( ( stl.color & 0x03E0 ) >> 5 ) / 31.0;
+//     float blue  = ( ( stl.color & 0x7C00 ) >> 10) / 31.0;
 
 //     printf("stl[%i]: red:%f green:%f blue:%f \n",i,red,green,blue);
 //     printf("normal( %f, %f, %f )\n",
@@ -68,7 +71,7 @@ void gl_drawframe(uint8_t* model) {
 //       stl.vertex3[0],stl.vertex3[1],stl.vertex3[2]);
 
     //glColor3f(red,green,blue);
-    glColor3f(0.0, 0.0, 0.0);
+    glColor3f(1.0, 1.0, 1.0);
     glBegin(GL_POLYGON);
     glNormal3f(stl.normal[0],stl.normal[1],stl.normal[2]);
     glVertex3f(stl.vertex1[0], stl.vertex1[1], stl.vertex1[2]);
