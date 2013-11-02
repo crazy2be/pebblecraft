@@ -21,6 +21,9 @@
  */
 
 #include "miniGL.h"
+#pragma GCC diagnostic ignored "-Wchar-subscripts"
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#pragma GCC diagnostic warning "-Wmaybe-uninitialized"
 
 
 //#define PRINT_FPS 1

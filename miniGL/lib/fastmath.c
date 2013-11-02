@@ -5,6 +5,9 @@
  *
  * Code borrowed from Rick Huebner, MathLib
  */
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wparentheses"
 
 #include "fastmath.h"
 

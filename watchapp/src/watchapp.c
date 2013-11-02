@@ -1,5 +1,6 @@
 #include <pebble.h>
 #include "dither.h"
+#include "miniGL/miniGL.h"
 
 static Window *window;
 

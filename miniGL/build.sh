@@ -4,7 +4,7 @@ CC=gcc
 
 rm -f main.bin
 
-MINIGL_SRC=(lib/fastgraph.c lib/fastmath.c lib/miniGL.c  lib/miniGL_lib.c )
+MINIGL_SRC=(lib/fastgraph.c lib/fastmath.c lib/miniGL.c  lib/miniGL_lib.c lib/mine.c)
 
 MSRC_OBJS=""
 for MSRC in ${MINIGL_SRC[@]}; do 
