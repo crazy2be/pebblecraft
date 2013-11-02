@@ -20,48 +20,35 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef ___MINIGL_LIB_H___
-#define ___MINIGL_LIB_H___
+#pragma once
 
-#include "fastgraph.h"
+// The global structure for this library
+extern uint32_t refcount;
 
-/**
- * The global structure for this library
- */
-uint32_t refcount;
+extern float modv_matrix[MAX_MAT_STACK_MODV][16];
+extern char  modv_level;
+extern float proj_matrix[MAX_MAT_STACK_PROJ][16];
+extern char  proj_level;
 
-float modv_matrix[MAX_MAT_STACK_MODV][16]; 
-char  modv_level;
-float proj_matrix[MAX_MAT_STACK_PROJ][16]; 
-char  proj_level;
-
-GLfloat cur_matrix[16];
-GLfloat per_matrix[16];
-GLfloat scr_matrix[16]; 
-GLfloat cur_color[4];
-GLfloat cur_normal[4];
-GLfloat vertices_color[MAX_VERTICES][4];
-GLfloat vertices_normal[MAX_VERTICES][4];
-GLfloat vertices[MAX_VERTICES][4];
-GLfloat scr_vertices[MAX_VERTICES][3];
-int num_vertices;
-int screen_width;
-int screen_height;
-int culling;
-int screen_startx;
-int screen_starty;
-int two_created;
-int lighting;
-int wireframe;
-int greyscale_mode;
-GLenum cur_mode;
-GLenum matrix_mode;
-Light lights[8];
-
-
-
-#endif
-
-/**
- * End of miniGL_lib.h
- */
+extern GLfloat cur_matrix[16];
+extern GLfloat per_matrix[16];
+extern GLfloat scr_matrix[16];
+extern GLfloat cur_color[4];
+extern GLfloat cur_normal[4];
+extern GLfloat vertices_color[MAX_VERTICES][4];
+extern GLfloat vertices_normal[MAX_VERTICES][4];
+extern GLfloat vertices[MAX_VERTICES][4];
+extern GLfloat scr_vertices[MAX_VERTICES][3];
+extern int num_vertices;
+extern int screen_width;
+extern int screen_height;
+extern int culling;
+extern int screen_startx;
+extern int screen_starty;
+extern int two_created;
+extern int lighting;
+extern int wireframe;
+extern int greyscale_mode;
+extern GLenum cur_mode;
+extern GLenum matrix_mode;
+extern Light lights[8];

@@ -23,13 +23,14 @@
 #include "fastgraph.h"
 #include <stdint.h>
 #include <string.h>
-#include <stdio.h>
+#define printf(...)
+
 
 #define MAX_SCREEN_WIDTH	144
 #define MAX_SCREEN_HEIGHT	144
 
 //4-bit grayscale, only need support in framebuffer and draw_pixel
-static uint8_t framebuffer[MAX_SCREEN_WIDTH * MAX_SCREEN_HEIGHT / 2];
+uint8_t framebuffer[MAX_SCREEN_WIDTH * MAX_SCREEN_HEIGHT / 2];
 static uint8_t current_color = 0x00; //Default to black
 static uint8_t clear_color = 0x00; //Default to black
 
@@ -142,7 +143,7 @@ void fgClearColor(int r, int g, int b){
  *
  */
 void fgClearWindow(int sx, int sy, int w, int h) {
-#ifdef DEBUG
+#ifdef DUMP_FRAME_DEBUG
   //lets dump the framebuffer to file
   static int framecount = 0;
   static int filecount = 0;

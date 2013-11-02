@@ -42,7 +42,8 @@ void gl_init() {
 #endif
 }
 
-void gl_drawframe(uint8_t* model, int triangle_count) {
+void gl_drawframe(uint8_t* model) {
+  int triangle_count = *(int*)&model[80];
   glClearColor(0.0,0.0,0.0,0.0);
   glClear(GL_COLOR_BUFFER_BIT);
   for (int i = 0; i < triangle_count; i++){
@@ -75,22 +76,3 @@ void gl_drawframe(uint8_t* model, int triangle_count) {
   glFlush();
   glClear(GL_COLOR_BUFFER_BIT);
 }
-
-#if 1
-#include <stdio.h>
-unsigned char* load_model() {
-  FILE* modelfile = fopen("model1.stl","rb");
-  if(modelfile == NULL){
-    printf("couldn't open modelfile\n");
-    return NULL;
-  }
-  fseek(modelfile,0,SEEK_END);
-  int modelfile_bytes = ftell(modelfile);
-  fseek(modelfile,0,SEEK_SET);
-  unsigned char* model = (unsigned char*)malloc(modelfile_bytes);
-  fread(model,1,modelfile_bytes,modelfile);
-  return model;
-}
-# else
-// TODO: Pebble impl
-#endif

@@ -19,9 +19,38 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
 #include "miniGL.h"
-#include "miniGL_lib.h"
+
+// The global structure for this library
+uint32_t refcount;
+
+float modv_matrix[MAX_MAT_STACK_MODV][16];
+char  modv_level;
+float proj_matrix[MAX_MAT_STACK_PROJ][16];
+char  proj_level;
+
+GLfloat cur_matrix[16];
+GLfloat per_matrix[16];
+GLfloat scr_matrix[16];
+GLfloat cur_color[4];
+GLfloat cur_normal[4];
+GLfloat vertices_color[MAX_VERTICES][4];
+GLfloat vertices_normal[MAX_VERTICES][4];
+GLfloat vertices[MAX_VERTICES][4];
+GLfloat scr_vertices[MAX_VERTICES][3];
+int num_vertices;
+int screen_width;
+int screen_height;
+int culling;
+int screen_startx;
+int screen_starty;
+int two_created;
+int lighting;
+int wireframe;
+int greyscale_mode;
+GLenum cur_mode;
+GLenum matrix_mode;
+Light lights[8];
 
 /**
  * The routine to open the shared library.  If some other program

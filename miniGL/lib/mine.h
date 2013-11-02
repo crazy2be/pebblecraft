@@ -2,9 +2,7 @@
 
 void gl_init(void);
 
-unsigned char* load_model(void);
-
-void gl_drawframe(uint8_t* model, int triangle_count);
+void gl_drawframe(uint8_t* model);
 
 struct stl_data {
   float normal[3];

@@ -20,21 +20,20 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "miniGL.h"
 #pragma GCC diagnostic ignored "-Wchar-subscripts"
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #pragma GCC diagnostic warning "-Wmaybe-uninitialized"
 
+#define printf(...)
 
-//#define PRINT_FPS 1
 #define W 1
 #define EPSILON 0.02
 
+#include "miniGL.h"
 #include "miniGL_lib.h"
 #include "fastgraph.h"
 #include "fastmath.h"
 #include <stdint.h>
-#include <stdio.h>
 
 typedef float fixed;
 

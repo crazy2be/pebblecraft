@@ -16,6 +16,10 @@
       "type": "raw",
       "name": "SOMETHING_USUALLY_ALL_CAPITALS",
       "file": "buf.grey4"
+    },{
+      "type": "raw",
+      "name": "MODEL",
+      "file": "model.stl"
     }]
   }
 }
