@@ -31,6 +31,7 @@
 //4-bit grayscale, only need support in framebuffer and draw_pixel
 static uint8_t framebuffer[MAX_SCREEN_WIDTH * MAX_SCREEN_HEIGHT / 2];
 static uint8_t current_color = 0x00; //Default to black
+static uint8_t clear_color = 0x00; //Default to black
 
 #define ABS(x) (x<0) ? -x : x
 
@@ -132,6 +133,11 @@ void fgDrawPixel(int x0, int y0) {
     DRAW_PIXEL( x0, y0 );
 }
 
+void fgClearColor(int r, int g, int b){
+  //current_color = (r+r+r+b+g+g+g+g)>>3; //Fast Luminosity 8-bit
+  clear_color = (r+r+r+b+g+g+g+g)>>6; //Fast Luminosity 4-bit
+}
+
 /*
  *
  */
@@ -149,13 +155,16 @@ void fgClearWindow(int sx, int sy, int w, int h) {
   framecount++;
 #endif
   //fast char aligned memset
-  if( (sx%2) && (w%2) ){
-    for(int row = sy; row < sy+h; row++){
-      memset( &framebuffer[ (sy*MAX_SCREEN_WIDTH + sx) / 2 ], 0, w/2 );
-    }
-  }else{ //slow hack, need to manually keep other pixel when not aligned
+  uint32_t clearvalue = clear_color << 4 | clear_color;
+
+  memset( framebuffer, clearvalue, sizeof(framebuffer));
+  //if( (sx%2) && (w%2) ){
+  //  for(int row = sy; row < sy+h; row++){
+  //    memset( &framebuffer[ (sy*MAX_SCREEN_WIDTH + sx) / 2 ], 0xFF, w/2 );
+  //  }
+  //}else{ //slow hack, need to manually keep other pixel when not aligned
     //Todo
-  }
+  //}
 }
 
 
