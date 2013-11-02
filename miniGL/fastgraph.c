@@ -21,6 +21,8 @@
  */
 
 #include "fastgraph.h"
+#include <stdint.h>
+#include <string.h>
 
 #define MAX_SCREEN_WIDTH	144
 #define MAX_SCREEN_HEIGHT	144
@@ -28,6 +30,8 @@
 //4-bit grayscale, only need support in framebuffer and draw_pixel
 static uint8_t framebuffer[MAX_SCREEN_WIDTH * MAX_SCREEN_HEIGHT / 2];
 static uint8_t current_color = 0x00; //Default to black
+
+#define ABS(x) (x<0) ? -x : x
 
 #define CHECK_CLIP( x1, y1 ) \
   (x1 >= 0 && x1 < MAX_SCREEN_WIDTH && y1 >= 0 && y1 < MAX_SCREEN_HEIGHT)
@@ -38,11 +42,11 @@ static uint8_t current_color = 0x00; //Default to black
   v0 ^= v1; \
 
 #define DRAW_PIXEL( x0, y0 ) \
-  int pixelpos = (y0*MAX_SCREEN_WIDTH + x0) / 2; \
+  { int pixelpos = (y0*MAX_SCREEN_WIDTH + x0) / 2; \
   framebuffer[ pixelpos ] = \
   (x0%2) ? \
-    (current_color << 4) | (frambuffer[ pixelpos ]  & 0x0F) : \
-    (frambuffer[ pixelpos ] & 0xF0) | current_color; \
+    (current_color << 4) | (framebuffer[ pixelpos ]  & 0x0F) : \
+    (framebuffer[ pixelpos ] & 0xF0) | current_color; }
 
 
 
@@ -53,7 +57,7 @@ static uint8_t current_color = 0x00; //Default to black
 void fgDrawLine(int x0, int y0, int x1, int y1) { 
   
   // If both points out of clipping zone
-  if( !Check_Clip( x0, y0 ) && !Check_Clip( x1, y1 ) ) {
+  if( !CHECK_CLIP( x0, y0 ) && !CHECK_CLIP( x1, y1 ) ) {
     // If both points off same side of clip
     if( x0 >= MAX_SCREEN_WIDTH && x1 >= MAX_SCREEN_WIDTH ) {
       return;
@@ -73,7 +77,7 @@ void fgDrawLine(int x0, int y0, int x1, int y1) {
 
   // compute difference between start and end
   int dx = x1 - x0;
-  int dy = abs( y1 - y0 );           // handle top to bottom, bottom to top
+  int dy = ABS( y1 - y0 );           // handle top to bottom, bottom to top
   int step_y = ( y0 > y1 )? -1: 1;   // direction of y steps (top to bottom, bottom to top)
 
   int delta;  // accumulated error from slope
@@ -128,9 +132,9 @@ void fgDrawPixel(int x0, int y0) {
  */
 void fgClearWindow(int sx, int sy, int w, int h) {
   //fast char aligned memset
-  if( (x%2) && (w%2) ){
-    for(int row = y; row < y+h, row++){
-      memset( framebuffer[ (y0*MAX_SCREEN_WIDTH + x0) / 2 ], 0, w/2 );
+  if( (sx%2) && (w%2) ){
+    for(int row = sy; row < sy+h; row++){
+      memset( &framebuffer[ (sy*MAX_SCREEN_WIDTH + sx) / 2 ], 0, w/2 );
     }
   }else{ //slow hack, need to manually keep other pixel when not aligned
     //Todo

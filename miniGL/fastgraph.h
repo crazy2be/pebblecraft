@@ -23,28 +23,10 @@
 #ifndef FASTGRAPH_H
 #define FASTGRAPH_H
 
-#include <Pilot.h>
-#include <ScrDriver.h>
-#include <MemoryPrv.h>
-
-int OSVersion(int major, int minor);
-Err SetDisplayMode(Boolean restore, DWord width, DWord height,
-                DWord depth, Boolean color);
-
-int fgChangeToGreyscale();
-int fgChangeFromGreyscale();
 void fgDrawLine(int x0, int y0, int x1, int y1);
 void fgSetColor(int r, int g, int b);
 void fgDrawPixel(int x0, int y0);
 void fgClearWindow(int sx, int sy, int w, int h);
-
-typedef struct {
-        //Win2Color clr;
-        //Win2Color clrBackground;
-        Byte *pbGreyScreenBase;
-        Byte *pbMonoScreenBase;
-        short fGreyScale;
-} WinStruct;    
 
 #endif
 
