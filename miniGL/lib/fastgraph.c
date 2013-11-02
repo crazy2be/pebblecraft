@@ -144,43 +144,8 @@ void fgClearColor(int r, int g, int b){
   clear_color = (r+r+r+b+g+g+g+g)>>6; //Fast Luminosity 4-bit
 }
 
-#ifdef DESKTOP
-void save_image(const char* filename, unsigned char* data, int len) {
-  FILE* fp = fopen(filename, "wb");
-  if (fp == NULL) {
-    printf("ERROR opening file %s\n", filename);
-    return;
-  }
-  int written = fwrite(data, len, 1, fp);
-  if (written != 1) {
-    printf("ERROR writing to file %s. Wrote %d bytes of %d total\n", filename, written, len);
-    return;
-  }
-  if (fflush(fp) != 0) {
-    printf("ERROR flushing file %s\n", filename);
-    return;
-  }
-  if (fclose(fp) != 0) {
-    printf("ERROR closing file %s\n", filename);
-    return;
-  }
-}
-#endif
-
-/*
- *
- */
 void fgClearWindow(int sx, int sy, int w, int h) {
-#ifdef DESKTOP
-  //lets dump the framebuffer to file
-  static int framecount = 0;
-  static int filecount = 0;
-  char filename[32];
-  sprintf(filename,"fb_%03d.gray4bit",filecount);
-  save_image(filename, framebuffer, sizeof(framebuffer));
-  filecount++;
-  framecount++;
-#endif
+
   //fast char aligned memset
   uint32_t clearvalue = clear_color << 4 | clear_color;
 

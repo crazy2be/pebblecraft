@@ -3,6 +3,7 @@
 #include "miniGL/mine.h"
 
 static Window *window;
+static Layer *render_layer;
 
 GRect bounds;
 
@@ -10,19 +11,33 @@ uint16_t frame = 0;
 uint8_t* model_buf = NULL;
 
 extern uint8_t framebuffer[144*144 / 2];
+static void register_timer(void* data);
+uint32_t frame_count = 0;
 
 static void render_opengl(Layer* layer, GContext *ctx) {
   GBitmap* bitmap = (GBitmap*)ctx;
-  uint32_t* data = (uint32_t*)bitmap->addr;
+  uint32_t* buf = (uint32_t*)bitmap->addr;
 
   gl_drawframe(model_buf);
-  floyd_steinberg_dither(framebuffer, (uint8_t*)data, -1);
+
+  floyd_steinberg_dither(framebuffer, (uint8_t*)buf, -1);
+//   buf[0] = frame_count++;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Rendered frame %ud", (unsigned int)frame_count);
+  frame_count++;
+}
+
+static void register_timer(void* data) {
+  app_timer_register(15, register_timer, data);
+  layer_mark_dirty(render_layer);
 }
 
 static void window_load(Window *window) {
-  Layer *window_layer = window_get_root_layer(window);
+  Layer* window_layer = window_get_root_layer(window);
   bounds = layer_get_bounds(window_layer);
-  layer_set_update_proc(window_layer, render_opengl);
+  render_layer = layer_create(bounds);
+  layer_set_update_proc(render_layer, render_opengl);
+  layer_add_child(window_layer, render_layer);
+  register_timer(NULL);
 }
 
 static void window_unload(Window *window) {}

@@ -14,8 +14,12 @@
   "resources": {
     "media": [{
       "type": "raw",
-      "name": "SOMETHING_USUALLY_ALL_CAPITALS",
+      "name": "TEST_IMAGE",
       "file": "buf.grey4"
+    },{
+      "type": "raw",
+      "name": "TEST_IMAGE_2",
+      "file": "buf2.grey4"
     },{
       "type": "raw",
       "name": "MODEL",
