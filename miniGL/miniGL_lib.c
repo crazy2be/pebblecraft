@@ -40,8 +40,12 @@ void miniGL_init(void) {
   }
   num_vertices = 0;
   two_created = 0;
-  lighting = 1;
-  wireframe = 1;
+  lighting = 0;
+  wireframe = 0;
+  screen_startx = 0;
+  screen_starty = 0;
+  screen_width = MAX_SCREEN_WIDTH;
+  screen_height = MAX_SCREEN_HEIGHT;
 }
 
 /**

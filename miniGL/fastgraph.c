@@ -23,6 +23,7 @@
 #include "fastgraph.h"
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #define MAX_SCREEN_WIDTH	144
 #define MAX_SCREEN_HEIGHT	144
@@ -42,7 +43,7 @@ static uint8_t current_color = 0x00; //Default to black
   v0 ^= v1; \
 
 #define DRAW_PIXEL( x0, y0 ) \
-  { int pixelpos = (y0*MAX_SCREEN_WIDTH + x0) / 2; \
+  if( CHECK_CLIP(x0,y0)){ int pixelpos = (y0*MAX_SCREEN_WIDTH + x0) / 2; \
   framebuffer[ pixelpos ] = \
   (x0%2) ? \
     (current_color << 4) | (framebuffer[ pixelpos ]  & 0x0F) : \
@@ -50,11 +51,8 @@ static uint8_t current_color = 0x00; //Default to black
 
 
 
-/*
- * Draws a line from (x0,y0) to (x1,y1) using Bresenham's algorithm and the 
- * globally-set greyscale mode.
- */
 void fgDrawLine(int x0, int y0, int x1, int y1) { 
+  printf("fgDrawLine %d %d %d %d\n",x0,y0,x1,y1);
   
   // If both points out of clipping zone
   if( !CHECK_CLIP( x0, y0 ) && !CHECK_CLIP( x1, y1 ) ) {
@@ -93,6 +91,7 @@ void fgDrawLine(int x0, int y0, int x1, int y1) {
         delta += dx;
       }
       x++;
+      printf("draw_pixel %d %d\n",x,y);
       DRAW_PIXEL( x, y );
     }
   } else {
@@ -124,13 +123,28 @@ void fgSetColor(int r, int g, int b) {
  * current color.
  */
 void fgDrawPixel(int x0, int y0) {
-  if ( CHECK_CLIP(x0, y0) ) DRAW_PIXEL( x0, y0 );
+  printf("fgDrawPixel\n");
+  //if ( CHECK_CLIP(x0, y0) ) 
+    DRAW_PIXEL( x0, y0 );
 }
 
 /*
  *
  */
 void fgClearWindow(int sx, int sy, int w, int h) {
+#ifdef DEBUG
+  //lets dump the framebuffer to file
+  static int framecount = 0;
+  static int filecount = 0;
+    char filename[32];
+    sprintf(filename,"fb_%03d.gray4bit",filecount);
+    FILE *rawfile = fopen(filename, "wb" );
+    fwrite( framebuffer, 1, sizeof(framebuffer), rawfile);
+    fclose(rawfile);
+    filecount++;
+
+  framecount++;
+#endif
   //fast char aligned memset
   if( (sx%2) && (w%2) ){
     for(int row = sy; row < sy+h; row++){

@@ -31,6 +31,7 @@
 #include "fastgraph.h"
 #include "fastmath.h"
 #include <stdint.h>
+#include <stdio.h>
 
 typedef float fixed;
 
@@ -264,7 +265,7 @@ void glColor3f(GLfloat r, GLfloat g, GLfloat b) {
 	cur_color[2] = b;
 	cur_color[3] = 1.0;
 
-	fgSetColor(r,g,b);
+	fgSetColor(r*255,g*255,b*255);
 }
 
 /**
@@ -282,7 +283,7 @@ void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 	cur_color[2] = b;
 	cur_color[3] = a;
 
-	fgSetColor(r,g,b);
+	fgSetColor(r*255,g*255,b*255);
 }
 
 /**
@@ -338,6 +339,10 @@ void gluOrtho2D(GLdouble left, GLdouble right, GLdouble bottom,
  * Sets up the viewport.  Same stuff as WinSetGLArea below.
  */
 void glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+  screen_startx = x;
+  screen_starty = y;
+  screen_width = width;
+  screen_height = height;
 	// fill in here.
 }
 
@@ -555,7 +560,7 @@ void DrawScanLine(GLfloat *start, GLfloat *end, GLfloat *startnormal,
 void SetColor() {
 
 
-	fgSetColor(cur_color[0], cur_color[1], cur_color[2]);
+	fgSetColor(cur_color[0]*255, cur_color[1]*255, cur_color[2]*255);
 
 }
 
@@ -816,8 +821,8 @@ void glEnd(void) {
 
 			if (!wireframe) {
 			/** lighting calculation to get color */
-			DoLightingCalc(vertices[0], normal, &color1);
-			fgSetColor(color1.r, color1.g, color1.b);
+			//DoLightingCalc(vertices[0], normal, &color1);
+			//fgSetColor(color1.r, color1.g, color1.b);
 
 			/** find "highest" and "lowest" points in y dir */
 			oldtopy = -1000;
@@ -914,7 +919,7 @@ void glEnd(void) {
 	
 			/** Draw black edge lines */
 			if (wireframe) {
-				fgSetColor(0,0,0);
+				//fgSetColor(0,0,0);
 				for (i=1;i<num_vertices;i++) {
 					fgDrawLine(scr_vertices[i-1][0],
 						scr_vertices[i-1][1],
@@ -951,8 +956,6 @@ void glutSwapBuffers(void) {
  * For now does the same as glutSwapBuffers() above.
  */
 void glFlush(void) {
-	RGBColorType color1, color2;
-
 
 #ifdef PRINT_FPS
 	ULong t;
@@ -963,12 +966,6 @@ void glFlush(void) {
 	char text[30];
 	/** Don't count time spent swapping buffers now. */
 	t = TimGetTicks();
-#endif
-
-
-	fgSetColor(100,100,100);
-
-#ifdef PRINT_FPS
 	framecount++;
 	if (t - old_t > 0 && count_time) {
 		//fps = framecount;
@@ -982,8 +979,6 @@ void glFlush(void) {
 		count_time = 1;
 	}
 #endif
-
-	fgSetColor(0,0,0);
 
 }
 
