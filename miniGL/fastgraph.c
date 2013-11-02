@@ -52,7 +52,7 @@ static uint8_t current_color = 0x00; //Default to black
 
 
 void fgDrawLine(int x0, int y0, int x1, int y1) { 
-  printf("fgDrawLine %d %d %d %d\n",x0,y0,x1,y1);
+//  printf("fgDrawLine %d %d %d %d\n",x0,y0,x1,y1);
   
   // If both points out of clipping zone
   if( !CHECK_CLIP( x0, y0 ) && !CHECK_CLIP( x1, y1 ) ) {
@@ -116,6 +116,7 @@ void fgDrawLine(int x0, int y0, int x1, int y1) {
 void fgSetColor(int r, int g, int b) {
   //current_color = (r+r+r+b+g+g+g+g)>>3; //Fast Luminosity 8-bit
   current_color = (r+r+r+b+g+g+g+g)>>4; //Fast Luminosity 4-bit
+  printf("fgSetColor:%d\n",current_color);
 }
 
 /*
@@ -136,13 +137,12 @@ void fgClearWindow(int sx, int sy, int w, int h) {
   //lets dump the framebuffer to file
   static int framecount = 0;
   static int filecount = 0;
-    char filename[32];
-    sprintf(filename,"fb_%03d.gray4bit",filecount);
-    FILE *rawfile = fopen(filename, "wb" );
-    fwrite( framebuffer, 1, sizeof(framebuffer), rawfile);
-    fclose(rawfile);
-    filecount++;
-
+  char filename[32];
+  sprintf(filename,"fb_%03d.gray4bit",filecount);
+  FILE *rawfile = fopen(filename, "wb" );
+  fwrite( framebuffer, 1, sizeof(framebuffer), rawfile);
+  fclose(rawfile);
+  filecount++;
   framecount++;
 #endif
   //fast char aligned memset
