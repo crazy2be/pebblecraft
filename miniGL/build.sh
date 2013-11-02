@@ -1,5 +1,6 @@
+#!/bin/bash -e
 
-CFLAGS="-std=c99 -DDEBUG=1 -O0 -g -Wall -Wfatal-errors"
+CFLAGS="-std=c99 -DDESKTOP=1 -O0 -g -Wall -Wfatal-errors"
 CC=gcc
 
 rm -f main.bin

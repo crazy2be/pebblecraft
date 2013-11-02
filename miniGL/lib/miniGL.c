@@ -23,8 +23,13 @@
 #pragma GCC diagnostic ignored "-Wchar-subscripts"
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #pragma GCC diagnostic warning "-Wmaybe-uninitialized"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
+#ifdef DESKTOP
+#include <stdio.h>
+#else
 #define printf(...)
+#endif
 
 #define W 1
 #define EPSILON 0.02

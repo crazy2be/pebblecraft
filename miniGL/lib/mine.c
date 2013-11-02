@@ -3,9 +3,11 @@
 #include "mine.h"
 #include "miniGL.h"
 
+#ifdef DESKTOP
+#include <stdio.h>
+#else
 #define printf(...)
-
-#define GL_COLOR_BUFFER_BIT GL_COLOR
+#endif
 
 void gl_init() {
   glViewport(0,0,144,144);
@@ -45,7 +47,7 @@ void gl_init() {
 void gl_drawframe(uint8_t* model) {
   int triangle_count = *(int*)&model[80];
   glClearColor(0.0,0.0,0.0,0.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR);
   for (int i = 0; i < triangle_count; i++){
     struct stl_data stl =
       *(struct stl_data*)&model[80 + 4 + i*sizeof(struct stl_data)];
@@ -74,5 +76,5 @@ void gl_drawframe(uint8_t* model) {
     glEnd();
   }
   glFlush();
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR);
 }
