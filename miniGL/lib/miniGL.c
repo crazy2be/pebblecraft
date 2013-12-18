@@ -1059,7 +1059,7 @@ void glShadeModel(GLenum mode) {
  */
 void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) {
         GLfloat t[16];
-        double theta;
+        GLdouble theta;
 
 	theta = (angle/180.0) * PI;
 
@@ -1254,8 +1254,6 @@ void glEnable(GLenum cap) {
 }
 
 void glDisable(GLenum cap) {
-
-
 	if (cap >= GL_LIGHT0 && cap <= GL_LIGHT7) {
 		lights[(cap - GL_LIGHT0)].enabled = 0;
 	}
@@ -1270,7 +1268,6 @@ void glDisable(GLenum cap) {
 		default:
 			break;
 	}
-
 }
 
 /**
