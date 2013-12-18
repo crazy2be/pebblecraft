@@ -30,91 +30,65 @@
 #define printf(...)
 #endif
 
-
 #define MAX_SCREEN_WIDTH	144
 #define MAX_SCREEN_HEIGHT	168
 
-//4-bit grayscale, only need support in framebuffer and draw_pixel
+// 4-bit grayscale, only need support in framebuffer and draw_pixel
 uint8_t framebuffer[MAX_SCREEN_WIDTH * MAX_SCREEN_HEIGHT / 2];
 static uint8_t current_color = 0x00; //Default to black
 static uint8_t clear_color = 0x00; //Default to black
 
-#define ABS(x) (x<0) ? -x : x
 
-#define CHECK_CLIP( x1, y1 ) \
-  (x1 >= 0 && x1 < MAX_SCREEN_WIDTH && y1 >= 0 && y1 < MAX_SCREEN_HEIGHT)
-
-#define SWAP_POINTS( v0, v1 ) \
-  v0 ^= v1; \
-  v1 ^= v0; \
-  v0 ^= v1; \
-
-#define DRAW_PIXEL( x0, y0 ) \
-  if (CHECK_CLIP(x0,y0)) { \
-    int i = (y0*MAX_SCREEN_WIDTH + x0) / 2; \
-    if (x0 % 2 == 1) {\
-      framebuffer[i] = (framebuffer[i] & 0xF0) | (current_color & 0x0F); \
-    } else {\
-      framebuffer[i] = (framebuffer[i] & 0x0F) | ((current_color & 0x0F) << 4);\
-    }\
-  }
-
-
-
-void fgDrawLine(int x0, int y0, int x1, int y1) { 
-//  printf("fgDrawLine %d %d %d %d\n",x0,y0,x1,y1);
-  
-  // If both points out of clipping zone
-  if( !CHECK_CLIP( x0, y0 ) && !CHECK_CLIP( x1, y1 ) ) {
-    // If both points off same side of clip
-    if( x0 >= MAX_SCREEN_WIDTH && x1 >= MAX_SCREEN_WIDTH ) {
-      return;
-    } else if( x0 < 0 && x1 < 0 ) {
-      return;
-    } else if( y0 >= MAX_SCREEN_HEIGHT && y1 >= MAX_SCREEN_HEIGHT ) {
-      return;
-    } else if( y0 < 0 && y1 < 0 ) {
-      return;
-    }
-  }
-
-  if( x0 > x1 ) { // force drawing from left
-    SWAP_POINTS( x0, x1 );
-    SWAP_POINTS( y0, y1 );
-  }
-
-  // compute difference between start and end
-  int dx = x1 - x0;
-  int dy = ABS( y1 - y0 );           // handle top to bottom, bottom to top
-  int step_y = ( y0 > y1 )? -1: 1;   // direction of y steps (top to bottom, bottom to top)
-
-  int delta;  // accumulated error from slope
-  int x = x0; // placement points (initially start of line)
-  int y = y0; // placement points (initially start of line)
-
-  if( dx > dy ) { // find the fastest direction of traversal
-    delta = dx / 2;
-    while( x != x1 ) {
-      delta -= dy;
-      if( delta < 0 ) {
-        y += step_y;
-        delta += dx;
-      }
-      x++;
-      printf("draw_pixel %d %d\n",x,y);
-      DRAW_PIXEL( x, y );
-    }
+static void draw_pixel(int x, int y) {
+  int i = (y*MAX_SCREEN_WIDTH + x) / 2;
+  if (x % 2 == 1) {
+    framebuffer[i] = (framebuffer[i] & 0xF0) | (current_color & 0x0F);
   } else {
-    delta = dy / 2;
-    while( y != y1 ) {
-      delta -= dx;
-      if( delta < 0 ) {
-        x++;
-        delta += dy;
-      }
-      y += step_y;
-      DRAW_PIXEL( x, y );
-    }
+    framebuffer[i] = (framebuffer[i] & 0x0F) | ((current_color & 0x0F) << 4);
+  }
+}
+
+static int min(int a, int b) {
+  return a > b ? b : a;
+}
+
+static int max(int a, int b) {
+  return a < b ? b : a;
+}
+
+static void fgDrawHorizontal(int y, int x0, int x1) {
+  if (x0 > x1) {
+    int tmp = x0;
+    x0 = x1;
+    x1 = tmp;
+  }
+  x0 = max(x0, 0);
+  x1 = min(x1, MAX_SCREEN_WIDTH);
+  for (int x = x0; x < x1; x++) {
+    draw_pixel(x, y);
+  }
+}
+
+static void fgDrawVertical(int x, int y0, int y1) {
+  if (y0 > y1) {
+    int tmp = y0;
+    y0 = y1;
+    y1 = tmp;
+  }
+  y0 = max(y0, 0);
+  y1 = min(y1, MAX_SCREEN_HEIGHT);
+  for (int y = y0; y < y1; y++) {
+    draw_pixel(x, y);
+  }
+}
+
+void fgDrawLine(int x0, int y0, int x1, int y1) {
+  if (x0 == x1) {
+    fgDrawVertical(x0, y0, y1);
+  } else if (y0 == y1) {
+    fgDrawHorizontal(y0, x0, x1);
+  } else {
+    printf("fgDrawLine can only do vertical or horizontal lines. %d %d %d %d\n",x0,y0,x1,y1);
   }
 }
 
@@ -124,7 +98,6 @@ void fgDrawLine(int x0, int y0, int x1, int y1) {
  * color.
  */
 void fgSetColor(int r, int g, int b) {
-  //current_color = (r+r+r+b+g+g+g+g)>>3; //Fast Luminosity 8-bit
   current_color = (r+r+r+b+g+g+g+g)>>6; //Fast Luminosity 4-bit
   printf("fgSetColor:%d\n",current_color);
 }
@@ -134,32 +107,14 @@ void fgSetColor(int r, int g, int b) {
  * current color.
  */
 void fgDrawPixel(int x0, int y0) {
-  printf("fgDrawPixel\n");
-  //if ( CHECK_CLIP(x0, y0) ) 
-    DRAW_PIXEL( x0, y0 );
+  printf("fgDrawPixel not implemented\n");
 }
 
 void fgClearColor(int r, int g, int b){
-  //current_color = (r+r+r+b+g+g+g+g)>>3; //Fast Luminosity 8-bit
   clear_color = (r+r+r+b+g+g+g+g)>>6; //Fast Luminosity 4-bit
 }
 
 void fgClearWindow(int sx, int sy, int w, int h) {
-
-  //fast char aligned memset
   uint32_t clearvalue = clear_color << 4 | clear_color;
-
-  memset( framebuffer, clearvalue, sizeof(framebuffer));
-  //if( (sx%2) && (w%2) ){
-  //  for(int row = sy; row < sy+h; row++){
-  //    memset( &framebuffer[ (sy*MAX_SCREEN_WIDTH + sx) / 2 ], 0xFF, w/2 );
-  //  }
-  //}else{ //slow hack, need to manually keep other pixel when not aligned
-    //Todo
-  //}
+  memset(framebuffer, clearvalue, sizeof(framebuffer));
 }
-
-
-/* 
- * End of fastgraph.c
- */
