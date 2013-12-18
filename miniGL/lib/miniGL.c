@@ -375,8 +375,8 @@ void glOrtho(GLdouble left, GLdouble right,
   scr_matrix[0] = div(screen_width, width);
   scr_matrix[5] = -div(screen_height, height);
   scr_matrix[10] = 0;
-  scr_matrix[12] = add(from_int(screen_startx), div(from_int(screen_width), 2);
-  scr_matrix[13] = add(from_int(screen_starty), div(from_int(screen_height), 2);
+  scr_matrix[12] = add(from_int(screen_startx), div(from_int(screen_width), 2));
+  scr_matrix[13] = add(from_int(screen_starty), div(from_int(screen_height), 2));
 }
 
 /**
@@ -391,7 +391,7 @@ void glOrtho(GLdouble left, GLdouble right,
  */
 void gluOrtho2D(GLdouble left, GLdouble right, GLdouble bottom,
     GLdouble top) {
-  glOrtho(left, right, bottom, top, -1, 1);
+  glOrtho(left, right, bottom, top, from_int(-1), from_int(1));
 }
 
 /**
@@ -417,43 +417,32 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
  */
 void gluPerspective(GLdouble fovy,
     GLdouble aspect, GLdouble near, GLdouble distant) {
-  fixed *m;
-  fixed tmp_mat[16];
-  GLfloat half_angle;
-  GLfloat f, height, width;
+  GLfloat half_angle = (GLfloat)(fovy > 0 ? fovy : 45.0)*PI/360.0;
+  GLfloat f = Cos(half_angle) / Sin(half_angle);
+  GLfloat height = 2*near/f;
+  GLfloat width = height*(aspect > 0?aspect:1.0);
 
-  half_angle = (GLfloat)(fovy > 0?fovy:45.0)*PI/360.0;
-  f = Cos(half_angle)/Sin(half_angle);
-        height = 2*near/f;
-  width  = height*(aspect > 0?aspect:1.0);
-
-
-  m = cur_matrix;
-  if (m == NULL)
+  if (cur_matrix == NULL)
     return;
 
   InitializeMatrix(per_matrix);
-        (per_matrix)[10] = 0;
-        (per_matrix)[11] = (1.0/near);
+  per_matrix[10] = from_int(0);
+  per_matrix[11] = div(from_int(1), near);
 
   InitializeMatrix(scr_matrix);
-  (scr_matrix)[0] = DTF((GLfloat)(screen_width) / width);
-  (scr_matrix)[5] = -DTF((GLfloat)(screen_height) / height);
-  (scr_matrix)[10] = 0;
-  (scr_matrix)[12] = ITF(screen_startx) + ITF(screen_width)/2;
-  (scr_matrix)[13] = ITF(screen_starty) + ITF(screen_height)/2;
-
+  scr_matrix[ 0] = div(from_int(screen_width), width);
+  scr_matrix[ 5] = -div(from_int(screen_height), height);
+  scr_matrix[10] = 0;
+  scr_matrix[12] = from_int(screen_startx) + div(from_int(screen_width), 2);
+  scr_matrix[13] = from_int(screen_starty) + div(from_int(screen_height), 2);
 }
 
 /**
  * Begin a graphics primitive.
  */
 void glBegin(GLenum mode) {
-
-
   num_vertices = 0;
   cur_mode = mode;
-
 }
 
 /**
@@ -659,7 +648,7 @@ void glEnd(void) {
   int i, sx1, sx2, sy1, sy2, j, oldtopy, oldbottomy, oldi, oldj,
     o, n, y, tempx, tempy, q;
   GLfloat x1, y1, x2, y2, cosangle;
-  GLfloat  p1[4], in1[4], out1[4], normal[4], start[4],
+  GLfloat p1[4], in1[4], out1[4], normal[4], start[4],
       end[4];
   RGBColorType color1, color2;
   Line I, II;
@@ -692,12 +681,12 @@ void glEnd(void) {
     /** Translate into screen coords */
     //TransformToScreen(in1, scr_vertices[i]);
 
-                MatrixMultVector(scr_matrix, in1, out1);
+    MatrixMultVector(scr_matrix, in1, out1);
 
-                /** Add the point to the final list */
-                for(j=0;j<4;j++) {
-                        scr_vertices[i][j] = out1[j];
-                }
+    /** Add the point to the final list */
+    for(j=0;j<4;j++) {
+      scr_vertices[i][j] = out1[j];
+    }
 
   }
   //MatrixMultVector(modv_matrix[modv_level], cur_normal, normal);
@@ -1057,25 +1046,19 @@ void glFlush(void) {
  * 
  */
 void glVertex3f(GLfloat x, GLfloat y, GLfloat z) {
-  int i;
+  if (num_vertices >= MAX_VERTICES) return;
 
+  vertices[num_vertices][0] = x;
+  vertices[num_vertices][1] = y;
+  vertices[num_vertices][2] = z;
+  vertices[num_vertices][3] = from_int(1);
 
-  if (num_vertices < MAX_VERTICES) {
-    vertices[num_vertices][0] = x;
-    vertices[num_vertices][1] = y;
-    vertices[num_vertices][2] = z;
-    vertices[num_vertices][3] = 1.0;
-
-    for (i=0;i<4;i++) {
-      vertices_color[num_vertices][i]
-        = cur_color[i];
-      vertices_normal[num_vertices][i]
-        = cur_normal[i];
-    }
-
-    num_vertices++;
+  for (int i = 0; i < 4; i++) {
+    vertices_color[num_vertices][i] = cur_color[i];
+    vertices_normal[num_vertices][i] = cur_normal[i];
   }
 
+  num_vertices++;
 }
 
 /**
@@ -1261,13 +1244,10 @@ void glMatrixMode(GLenum mode) {
 }
 
 void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz) {
-
-
   cur_normal[0] = nx;
   cur_normal[1] = ny;
   cur_normal[2] = nz;
   cur_normal[3] = 1;
-
 }
 
 void glEnable(GLenum cap) {
