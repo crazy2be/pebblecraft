@@ -29,7 +29,7 @@ void gl_init() {
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_CULL_FACE);
-  glPolygonMode(GL_FRONT, GL_FILL);
+  glPolygonMode(GL_FRONT, GL_LINE);
 
   //gluPerspective(40.0, 1.4, -100.0, 0.0);
 
@@ -82,6 +82,7 @@ void gl_drawframe(uint8_t* model) {
     glVertex3f(stl.vertex1[0], stl.vertex1[1], stl.vertex1[2]);
     glVertex3f(stl.vertex2[0], stl.vertex2[1], stl.vertex2[2]);
     glVertex3f(stl.vertex3[0], stl.vertex3[1], stl.vertex3[2]);
+    glVertex3f(stl.vertex1[0], stl.vertex1[1], stl.vertex1[2]);
     glEnd();
   }
   glFlush();

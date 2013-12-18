@@ -664,7 +664,7 @@ void glEnd(void) {
   //ErrFatalDisplayIf(true, foo);
 
   /** Translate vertices to screen coords */
-  for(i=0; i < num_vertices; i++) {
+  for (int i = 0; i < num_vertices; i++) {
     /** Geometric transform */
     //MatrixMultVector(modv_matrix[modv_level], vertices[i], p1);
     MatrixMultVector(cur_matrix, vertices[i], p1);
@@ -674,7 +674,7 @@ void glEnd(void) {
     MatrixMultVector(per_matrix, p1, in1);
 
     /** Go from 4D back to 3D */
-    for(j=0;j<4;j++) {
+    for (int j = 0; j < 4; j++) {
       in1[j] = in1[j]/in1[3];
     }
 
@@ -684,7 +684,7 @@ void glEnd(void) {
     MatrixMultVector(scr_matrix, in1, out1);
 
     /** Add the point to the final list */
-    for(j=0;j<4;j++) {
+    for (int j = 0; j < 4; j++) {
       scr_vertices[i][j] = out1[j];
     }
 
@@ -696,26 +696,38 @@ void glEnd(void) {
     case GL_TRIANGLES:
       if (num_vertices < 3)
         break;
+//       j = 0;
+//       while ((j+2) < num_vertices) {
+//         if (culling && !BackFacing(j,j+1,j+2)) {
+//           for (o=j+1;o<(j+3);o++) {
+//             fgDrawLine(
+//               scr_vertices[o-1][0],
+//               scr_vertices[o-1][1],
+//               scr_vertices[o][0],
+//               scr_vertices[o][1]);
+//           }
+//           fgDrawLine(
+//             scr_vertices[o-1][0],
+//             scr_vertices[o-1][1],
+//             scr_vertices[j][0],
+//             scr_vertices[j][1]);
+//         }
+//         j+=3;
+//       }
 
       SetColor();
 
-      j = 0;
-      while ((j+2) < num_vertices) {
-        if (culling && !BackFacing(j,j+1,j+2)) {
-          for (o=j+1;o<(j+3);o++) {
-            fgDrawLine(
-              scr_vertices[o-1][0],
-              scr_vertices[o-1][1],
-              scr_vertices[o][0],
-              scr_vertices[o][1]);
-          }
-          fgDrawLine(
-            scr_vertices[o-1][0],
-            scr_vertices[o-1][1],
-            scr_vertices[j][0],
-            scr_vertices[j][1]);
-        }
-        j+=3;
+      fgDrawLine(scr_vertices[0][0], scr_vertices[0][1], scr_vertices[1][0], scr_vertices[1][1]);
+      fgDrawLine(scr_vertices[1][0], scr_vertices[1][1], scr_vertices[2][0], scr_vertices[2][1]);
+      fgDrawLine(scr_vertices[2][0], scr_vertices[2][1], scr_vertices[0][0], scr_vertices[0][1]);
+
+      break;
+
+    case GL_POINTS:
+      SetColor();
+
+      for (int i = 0; i < num_vertices; i++) {
+        fgDrawPixel(scr_vertices[i][0], scr_vertices[i][1]);
       }
       break;
 
@@ -841,17 +853,6 @@ void glEnd(void) {
       }
       break;
 
-    case GL_POINTS:
-      SetColor();
-
-      for(i=0; i < num_vertices; i++) {
-        fgDrawLine(scr_vertices[i][0],
-          scr_vertices[i][1],
-          scr_vertices[i][0],
-          scr_vertices[i][1]);
-      }
-      break;
-
     case GL_LINE_STRIP:
       SetColor();
 
@@ -880,8 +881,8 @@ void glEnd(void) {
       if (!wireframe) {
       /** lighting calculation to get color */
       if(lighting){
-        DoLightingCalc(vertices[0], normal, &color1);
-        fgSetColor(color1.r*255, color1.g*255, color1.b*255);
+//         DoLightingCalc(vertices[0], normal, &color1);
+//         fgSetColor(color1.r*255, color1.g*255, color1.b*255);
       }
 
       /** find "highest" and "lowest" points in y dir */

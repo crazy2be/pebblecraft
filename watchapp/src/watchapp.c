@@ -65,7 +65,13 @@ static void deinit(void) {
   window_destroy(window);
 }
 
+void test_func(double a) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "%f", a);
+}
+
 int main(void) {
+    long long n = 10;
+    test_func(n);
   init();
 
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window: %p", window);

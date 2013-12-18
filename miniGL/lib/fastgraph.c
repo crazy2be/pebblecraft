@@ -27,7 +27,8 @@
 #ifdef DESKTOP
 #include <stdio.h>
 #else
-#define printf(...)
+#include <pebble.h>
+#define printf(fmt, args...) APP_LOG(APP_LOG_LEVEL_DEBUG, fmt, ## args)
 #endif
 
 #define MAX_SCREEN_WIDTH	144
@@ -46,6 +47,20 @@ static void draw_pixel(int x, int y) {
   } else {
     framebuffer[i] = (framebuffer[i] & 0x0F) | ((current_color & 0x0F) << 4);
   }
+}
+
+static void draw_point(int x, int y) {
+  if (x < 1 || x >= MAX_SCREEN_WIDTH - 1) return;
+  if (y < 1 || y >= MAX_SCREEN_HEIGHT - 1) return;
+  draw_pixel(x - 1, y - 1);
+  draw_pixel(x - 1, y    );
+  draw_pixel(x - 1, y + 1);
+  draw_pixel(x    , y - 1);
+  draw_pixel(x    , y    );
+  draw_pixel(x    , y + 1);
+  draw_pixel(x + 1, y - 1);
+  draw_pixel(x + 1, y    );
+  draw_pixel(x + 1, y + 1);
 }
 
 static int min(int a, int b) {
@@ -83,13 +98,39 @@ static void fgDrawVertical(int x, int y0, int y1) {
 }
 
 void fgDrawLine(int x0, int y0, int x1, int y1) {
-  if (x0 == x1) {
-    fgDrawVertical(x0, y0, y1);
-  } else if (y0 == y1) {
-    fgDrawHorizontal(y0, x0, x1);
-  } else {
-    printf("fgDrawLine can only do vertical or horizontal lines. %d %d %d %d\n",x0,y0,x1,y1);
+//   if (x0 == x1) {
+//     fgDrawVertical(x0, y0, y1);
+//     return;
+//   } else if (y0 == y1) {
+//     fgDrawHorizontal(y0, x0, x1);
+//     return;
+//   }
+//   printf("raw x0 %d, x1 %d, y0 %d, y1 %d", x0, x1, y0, y1);
+  if (x0 > x1) {
+    int tmp = x0;
+    x0 = x1;
+    x1 = tmp;
+    tmp = y0;
+    y0 = y1;
+    y1 = tmp;
   }
+  draw_point(x0, y0);
+  draw_point(x1, y1);
+
+  x0 = max(x0, 0);
+  x1 = min(x1, MAX_SCREEN_WIDTH);
+  y0 = max(y0, 0);
+  y1 = min(y1, MAX_SCREEN_HEIGHT);
+
+//   printf("normalized x0 %d, x1 %d, y0 %d, y1 %d", x0, x1, y0, y1);
+  for (int x = x0; x < x1; x++) {
+    int dy = y1 - y0;
+    int dx = x1 - x0;
+    int y = y0 + ((dy*100 / dx) * (x - x0)) / 100;
+//     printf("x %d, y %d", x, y);
+    draw_pixel(x,  y);
+  }
+//   printf("fgDrawLine can only do vertical or horizontal lines. %d %d %d %d",x0,y0,x1,y1);
 }
 
 /*
@@ -99,15 +140,18 @@ void fgDrawLine(int x0, int y0, int x1, int y1) {
  */
 void fgSetColor(int r, int g, int b) {
   current_color = (r+r+r+b+g+g+g+g)>>6; //Fast Luminosity 4-bit
-  printf("fgSetColor:%d\n",current_color);
+//   printf("fgSetColor:%d\n",current_color);
 }
 
 /*
  * Using the current greyscale mode, draws a pixel on the screen using the 
  * current color.
  */
-void fgDrawPixel(int x0, int y0) {
-  printf("fgDrawPixel not implemented\n");
+void fgDrawPixel(int x, int y) {
+  draw_point(x, y);
+//   x = max(min(x, MAX_SCREEN_WIDTH), 0);
+//   y = max(min(y, MAX_SCREEN_HEIGHT), 0);
+//   draw_pixel(x, y);
 }
 
 void fgClearColor(int r, int g, int b){
