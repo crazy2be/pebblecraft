@@ -57,11 +57,11 @@ GLfloat vertices_normal[MAX_VERTICES][4];
 GLfloat vertices[MAX_VERTICES][4];
 GLfloat scr_vertices[MAX_VERTICES][3];
 int num_vertices;
-int screen_width;
-int screen_height;
 int culling;
-int screen_startx;
-int screen_starty;
+static int screen_startx = 0;
+static int screen_starty = 0;
+static int screen_width = 144;
+static int screen_height = 168;
 int two_created;
 int lighting;
 int wireframe;
@@ -92,10 +92,6 @@ void miniGL_init(void) {
   for (int i=0;i<8;i++) {
     lights[i].enabled = 0;
   }
-  screen_startx = 0;
-  screen_starty = 0;
-  screen_width = MAX_SCREEN_WIDTH;
-  screen_height = MAX_SCREEN_HEIGHT;
 }
 
 typedef float fixed;
@@ -139,6 +135,10 @@ flt add4(flt a, flt b, flt c, flt d) {
 
 flt sub(flt a, flt b) {
   return a - b;
+}
+
+flt from_int(int n) {
+  return (float)n;
 }
 
 /**
@@ -212,10 +212,10 @@ void VectorNormalize(GLfloat *v) {
  * cross = c0 x c1 (cross product).
  */
 void VectorCrossVector(const GLfloat *v1, const GLfloat *v2, GLfloat *cross) {
-  cross[0] = v1[1]*v2[2] - v2[1]*v1[2];
-  cross[1] = v1[2]*v2[0] - v2[2]*v1[0];
-  cross[2] = v1[0]*v2[1] - v2[0]*v1[1];
-  cross[3] = 1;
+  cross[0] = sub(mul(v1[1], v2[2]), mul(v2[1], v1[2]));
+  cross[1] = sub(mul(v1[2], v2[0]), mul(v2[2], v1[0]));
+  cross[2] = sub(mul(v1[0], v2[1]), mul(v2[0], v1[1]));
+  cross[3] = from_int(1);
 }
 
 /**
@@ -225,48 +225,32 @@ void VectorCrossVector(const GLfloat *v1, const GLfloat *v2, GLfloat *cross) {
  * m - input 4x4 matrix 
  */
 void InitializeMatrix(fixed *m) {
-  int i;
+  for (int i = 0; i < 16; i++) {
+    m[i] = from_int(0);
+  }
 
-  for (i=0;i<16;i++)
-    m[i] = 0.0;
-
-  m[0] = 1;
-  m[5] = 1;
-  m[10] = 1;
-  m[15] = 1;
-}
-
-void MatrixToFixed(const GLfloat* d, fixed* f) {
-  int i;
-
-  for (i=0; i<16; i++)
-    f[i] = DTF(d[i]);
+  m[0] = from_int(1);
+  m[5] = from_int(1);
+  m[10] = from_int(1);
+  m[15] = from_int(1);
 }
 
 void glMultMatrixf(const GLfloat *input) {
-        GLfloat result[16];
-        const GLfloat *c;
-        GLfloat *m;
-        int i,j;
+  GLfloat r[16]; // result
+  const GLfloat *c = input;
+  GLfloat *m = cur_matrix;
 
-        c = input;
-        m = cur_matrix;
+  /** 4x4 matrix multiplication */
+  for (int j = 0; j < 4; j++) {
+    r[0 +j] = add4(mul(c[0+j], m[ 0]), mul(c[4+j], m[ 1]), mul(c[8+j], m[ 2]), mul(c[12+j], m[ 3]));
+    r[4 +j] = add4(mul(c[0+j], m[ 4]), mul(c[4+j], m[ 5]), mul(c[8+j], m[ 6]), mul(c[12+j], m[ 7]));
+    r[8 +j] = add4(mul(c[0+j], m[ 8]), mul(c[4+j], m[ 9]), mul(c[8+j], m[10]), mul(c[12+j], m[11]));
+    r[12+j] = add4(mul(c[0+j], m[12]), mul(c[4+j], m[13]), mul(c[8+j], m[14]), mul(c[12+j], m[15]));
+  }
 
-        /** 4x4 matrix multiplication */
-        for (j=0;j<4;j++) {
-                result[0+j] = c[0+j]*m[0] + c[4+j]*m[1]
-                                        + c[8+j]*m[2] + c[12+j]*m[3];
-                result[4+j] = c[0+j]*m[4] + c[4+j]*m[5]
-                                        + c[8+j]*m[6] + c[12+j]*m[7];
-                result[8+j] = c[0+j]*m[8] + c[4+j]*m[9]
-                                        + c[8+j]*m[10] + c[12+j]*m[11];
-                result[12+j] = c[0+j]*m[12] + c[4+j]*m[13]
-                                        + c[8+j]*m[14] + c[12+j]*m[15];
-        }
-
-        for (i=0;i<16;i++) {
-                m[i] = result[i];
-        }
+  for (int i = 0; i < 16; i++) {
+    m[i] = r[i];
+  }
 }
 
 /**
@@ -276,13 +260,8 @@ void glMultMatrixf(const GLfloat *input) {
  * m - input 4x4 matrix
  */
 void glLoadMatrixf(const GLfloat *m) {
-        int i;
-  GLfloat *c;
-
-  c = cur_matrix;
-
-  for (i=0;i<16;i++) {
-    c[i] = m[i];
+  for (int i = 0; i < 16; i++) {
+    cur_matrix[i] = m[i];
   }
 }
 
@@ -291,20 +270,13 @@ void glLoadMatrixf(const GLfloat *m) {
  * matrix.  Same as InitializeMatrix(...) but uses the gl function name.
  */
 void glLoadIdentity(void) {
-  fixed *m;
+  fixed *m = cur_matrix;
 
-  m = cur_matrix;
-
-  if (m == NULL)
-    return;
+  if (m == NULL) return;
 
   InitializeMatrix(cur_matrix);
-
 }
 
-/**
- * Doesn't do anything right now since there are no colors.
- */
 void glClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
   fgClearColor(red*255,green*255,blue*255);
 }
@@ -355,13 +327,7 @@ void glClear(GLbitfield mask) {
  * b - blue [0,1]
  */
 void glColor3f(GLfloat r, GLfloat g, GLfloat b) {
-
-  cur_color[0] = r*255;
-  cur_color[1] = g*255;
-  cur_color[2] = b*255;
-  cur_color[3] = 255;
-
-  fgSetColor(r*255,g*255,b*255);
+  glColor4f(r, g, b, from_int(1));
 }
 
 /**
@@ -373,13 +339,12 @@ void glColor3f(GLfloat r, GLfloat g, GLfloat b) {
  * a - alpha transparency [0,1]
  */
 void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
+  cur_color[0] = mul(r, 255);
+  cur_color[1] = mul(g, 255);
+  cur_color[2] = mul(b, 255);
+  cur_color[3] = mul(a, 255);
 
-  cur_color[0] = r*255;
-  cur_color[1] = g*255;
-  cur_color[2] = b*255;
-  cur_color[3] = a*255;
-
-  fgSetColor(r*255,g*255,b*255);
+  fgSetColor(cur_color[0], cur_color[1], cur_color[2]);
 }
 
 /**
@@ -396,24 +361,22 @@ void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 void glOrtho(GLdouble left, GLdouble right,
     GLdouble bottom, GLdouble top, GLdouble near,
     GLdouble distant) {
-  GLfloat d;
 
-  GLfloat width = right - left;
-  GLfloat height = top - bottom;
+  GLfloat width = sub(right, left);
+  GLfloat height = sub(top, bottom);
 
-
-  d = 32000.0;
+  GLfloat d = from_int(32000);
   InitializeMatrix(per_matrix);
-        per_matrix[10] = 0;
-        per_matrix[11] = (1.0/d);
+
+  per_matrix[10] = 0;
+  per_matrix[11] = div(from_int(1), d);
 
   InitializeMatrix(scr_matrix);
-  scr_matrix[0] = DTF((GLfloat)(screen_width) / width);
-  scr_matrix[5] = -DTF((GLfloat)(screen_height) / height);
+  scr_matrix[0] = div(screen_width, width);
+  scr_matrix[5] = -div(screen_height, height);
   scr_matrix[10] = 0;
-  scr_matrix[12] = ITF(screen_startx) + ITF(screen_width)/2;
-  scr_matrix[13] = ITF(screen_starty) + ITF(screen_height)/2;
-
+  scr_matrix[12] = add(from_int(screen_startx), div(from_int(screen_width), 2);
+  scr_matrix[13] = add(from_int(screen_starty), div(from_int(screen_height), 2);
 }
 
 /**
