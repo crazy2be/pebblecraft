@@ -24,8 +24,8 @@
 // The global structure for this library
 uint32_t refcount;
 
-float modv_matrix[MAX_MAT_STACK_MODV][16];
-char  modv_level;
+// float modv_matrix[MAX_MAT_STACK_MODV][16];
+// char  modv_level;
 float proj_matrix[MAX_MAT_STACK_PROJ][16];
 char  proj_level;
 
@@ -60,7 +60,7 @@ Light lights[8];
 void miniGL_init(void) {
   /** Initialize globals here */
   refcount = 1;
-  modv_level = 0;
+//   modv_level = 0;
   proj_level = 0;
   for (int i=0;i<16;i++) {
     cur_matrix[i] = 0.0;

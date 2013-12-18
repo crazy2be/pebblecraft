@@ -42,10 +42,10 @@
 
 typedef float fixed;
 
-#define ITF(x) ((float)(x))
+#define ITF(x) ((GLfloat)(x))
 #define FTI(x) ((int)(x))
 
-fixed DTF(float f) {
+fixed DTF(GLfloat f) {
 	return f;
 }
 
@@ -107,12 +107,12 @@ GLfloat VectorDotVector(const GLfloat *v1, const GLfloat *v2) {
 	return answer;
 }
 
-float fastInvSqrt(float x)
+float fastInvSqrt(GLfloat x)
 {
-	float xhalf = 0.5f*x;
+  GLfloat xhalf = 0.5f*x;
 	union
 	{
-		float x;
+	  GLfloat x;
 		int i;
 	} u;
 	u.x = x;
@@ -122,11 +122,11 @@ float fastInvSqrt(float x)
 }
 
 void VectorNormalize(GLfloat *v) {
-	float l_sqr = v[0]*v[0] +
+  GLfloat l_sqr = v[0]*v[0] +
 		v[1]*v[1] +
 		v[2]*v[2] +
 		v[3]*v[3];
-	float l_inv = fastInvSqrt(l_sqr);//1/Sqrt(l_sqr);
+  GLfloat l_inv = fastInvSqrt(l_sqr);//1/Sqrt(l_sqr);
 
 	v[0] = v[0]*l_inv;
 	v[1] = v[1]*l_inv;
@@ -322,7 +322,7 @@ void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 void glOrtho(GLdouble left, GLdouble right,
 		GLdouble bottom, GLdouble top, GLdouble near,
 		GLdouble distant) {
-	float d;
+  GLfloat d;
 
 	GLfloat width = right - left;
 	GLfloat height = top - bottom;
@@ -334,8 +334,8 @@ void glOrtho(GLdouble left, GLdouble right,
         per_matrix[11] = (1.0/d);
 
 	InitializeMatrix(scr_matrix);
-	scr_matrix[0] = DTF((float)(screen_width) / width);
-	scr_matrix[5] = -DTF((float)(screen_height) / height);
+	scr_matrix[0] = DTF((GLfloat)(screen_width) / width);
+	scr_matrix[5] = -DTF((GLfloat)(screen_height) / height);
 	scr_matrix[10] = 0;
 	scr_matrix[12] = ITF(screen_startx) + ITF(screen_width)/2;
 	scr_matrix[13] = ITF(screen_starty) + ITF(screen_height)/2;
@@ -382,10 +382,10 @@ void gluPerspective(GLdouble fovy,
 		GLdouble aspect, GLdouble near, GLdouble distant) {
 	fixed *m;
 	fixed tmp_mat[16];
-	float half_angle;
-	float f, height, width;
+  GLfloat half_angle;
+  GLfloat f, height, width;
 	
-	half_angle = (float)(fovy > 0?fovy:45.0)*PI/360.0;
+	half_angle = (GLfloat)(fovy > 0?fovy:45.0)*PI/360.0;
 	f = Cos(half_angle)/Sin(half_angle);
         height = 2*near/f;
 	width  = height*(aspect > 0?aspect:1.0);
@@ -400,8 +400,8 @@ void gluPerspective(GLdouble fovy,
         (per_matrix)[11] = (1.0/near);
 
 	InitializeMatrix(scr_matrix);
-	(scr_matrix)[0] = DTF((float)(screen_width) / width);
-	(scr_matrix)[5] = -DTF((float)(screen_height) / height);
+	(scr_matrix)[0] = DTF((GLfloat)(screen_width) / width);
+	(scr_matrix)[5] = -DTF((GLfloat)(screen_height) / height);
 	(scr_matrix)[10] = 0;
 	(scr_matrix)[12] = ITF(screen_startx) + ITF(screen_width)/2;
 	(scr_matrix)[13] = ITF(screen_starty) + ITF(screen_height)/2;
@@ -423,7 +423,7 @@ void glBegin(GLenum mode) {
  * Special function for BackFacing
  */
 void MatrixMultVector2D(const fixed *m, const GLfloat *p, GLfloat *ret) {
-	float p0, p1, p2, p3;
+  GLfloat p0, p1, p2, p3;
 
 	p0 = p[0];
 	p1 = p[1];
@@ -466,7 +466,7 @@ int BackFacing(int l, int m, int n) {
 	return fixmul(c00, c11) > fixmul(c10, c01);
 }               
 
-void DoLightingCalc(GLfloat pos[4], GLfloat normal[4], 
+void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
 				RGBColorType *color1) {
 	GLfloat blaa[4] = {0.0,0.0,0.0,0.0};
 	GLfloat cosangle = 0.0f;
@@ -597,8 +597,8 @@ void SetColor() {
 }
 
 void TransformToScreen(const GLfloat* in, GLfloat* ret) {
-	float *m;
-	float p0, p1, p2, p3;
+	GLfloat *m;
+  GLfloat p0, p1, p2, p3;
 
  	m = scr_matrix;
 	p0 = in[0];
@@ -621,7 +621,7 @@ void TransformToScreen(const GLfloat* in, GLfloat* ret) {
 void glEnd(void) {
 	int i, sx1, sx2, sy1, sy2, j, oldtopy, oldbottomy, oldi, oldj,
 		o, n, y, tempx, tempy, q;
-	float x1, y1, x2, y2, cosangle;
+  GLfloat x1, y1, x2, y2, cosangle;
 	GLfloat  p1[4], in1[4], out1[4], normal[4], start[4],
 			end[4];
 	RGBColorType color1, color2;
@@ -880,9 +880,9 @@ void glEnd(void) {
 			I.x1 = scr_vertices[I.start][0];
 			I.y1 = scr_vertices[I.start][1];
 			I.z1 = scr_vertices[I.start][2];
-			I.m = (GLfloat)(scr_vertices[I.end][1]-I.y1) 
+			I.m = (GLfloat)(scr_vertices[I.end][1]-I.y1)
 			    / (GLfloat)(scr_vertices[I.end][0]-I.x1);
-			I.mz = (GLfloat)(scr_vertices[I.end][1]-I.y1) 
+			I.mz = (GLfloat)(scr_vertices[I.end][1]-I.y1)
 			    / (GLfloat)(scr_vertices[I.end][2]-I.z1);
 
 			II.start = (oldi) % n;
@@ -1150,60 +1150,60 @@ void glTranslatef(GLfloat x, GLfloat y, GLfloat z) {
 
 }
 
-void glPopMatrix(void) {
+// void glPopMatrix(void) {
+//
+//
+// 	switch (matrix_mode) {
+// 		case GL_MODELVIEW:
+// 			/** Error to pop an empty stack */
+// 			if (modv_level <= 0)
+// 				return;
+// 			modv_level--;
+// 			//cur_matrix = modv_matrix[modv_level];
+// 			break;
+// 		case GL_PROJECTION:
+// 			/** Error to pop an empty stack */
+// 			if (proj_level <= 0)
+// 				return;
+// 			proj_level--;
+// 			//cur_matrix = proj_matrix[proj_level];
+// 			break;
+// 	}
+//
+// }
+//
+// void CopyMatrixFTF(const fixed* src, fixed* dst) {
+// 	char i;
+//
+// 	for (i=0; i < 16; i++)
+// 		dst[i] = src[i];
+// }
 
-
-	switch (matrix_mode) {
-		case GL_MODELVIEW:
-			/** Error to pop an empty stack */
-			if (modv_level <= 0)
-				return;
-			modv_level--;
-			//cur_matrix = modv_matrix[modv_level];
-			break;
-		case GL_PROJECTION:
-			/** Error to pop an empty stack */
-			if (proj_level <= 0)
-				return;
-			proj_level--;
-			//cur_matrix = proj_matrix[proj_level];
-			break;
-	}
-
-}
-
-void CopyMatrixFTF(const fixed* src, fixed* dst) {
-	char i;
-
-	for (i=0; i < 16; i++)
-		dst[i] = src[i];
-}
-
-void glPushMatrix(void) {
-
-
-	switch (matrix_mode) {
-		case GL_MODELVIEW:
-			/** Error to pop an empty stack */
-			if (modv_level >= (MAX_MAT_STACK_MODV - 1))
-				return;
-			CopyMatrixFTF(modv_matrix[modv_level],
-				modv_matrix[modv_level + 1]);
-			modv_level++;
-			//cur_matrix = modv_matrix[modv_level];
-			break;
-		case GL_PROJECTION:
-			/** Error to pop an empty stack */
-			if (proj_level >= (MAX_MAT_STACK_PROJ - 1))
-				return;
-			CopyMatrixFTF(proj_matrix[proj_level],
-				proj_matrix[proj_level + 1]);
-			proj_level++;
-			//cur_matrix = proj_matrix[proj_level];
-			break;
-	}
-
-}
+// void glPushMatrix(void) {
+//
+//
+// 	switch (matrix_mode) {
+// 		case GL_MODELVIEW:
+// 			/** Error to pop an empty stack */
+// 			if (modv_level >= (MAX_MAT_STACK_MODV - 1))
+// 				return;
+// 			CopyMatrixFTF(modv_matrix[modv_level],
+// 				modv_matrix[modv_level + 1]);
+// 			modv_level++;
+// 			//cur_matrix = modv_matrix[modv_level];
+// 			break;
+// 		case GL_PROJECTION:
+// 			/** Error to pop an empty stack */
+// 			if (proj_level >= (MAX_MAT_STACK_PROJ - 1))
+// 				return;
+// 			CopyMatrixFTF(proj_matrix[proj_level],
+// 				proj_matrix[proj_level + 1]);
+// 			proj_level++;
+// 			//cur_matrix = proj_matrix[proj_level];
+// 			break;
+// 	}
+//
+// }
 
 void glMatrixMode(GLenum mode) {
 
