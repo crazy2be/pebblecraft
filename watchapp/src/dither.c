@@ -61,8 +61,10 @@ int index(int x, int y) {
 
 // WARNING: Modifies grey buffer
 void floyd_steinberg_dither(uint8_t* grey, uint8_t* bw, int num_pixels) {
-  int w = 168;
+  int w = 144;
   int h = 144;
+  //lets move the screen down a bit (24 lines)
+  //bw += (160 * 24) / 8;
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
       int g = extract_grey(grey, index(x, y));

@@ -32,7 +32,7 @@
 
 
 #define MAX_SCREEN_WIDTH	144
-#define MAX_SCREEN_HEIGHT	168
+#define MAX_SCREEN_HEIGHT	144
 
 //4-bit grayscale, only need support in framebuffer and draw_pixel
 uint8_t framebuffer[MAX_SCREEN_WIDTH * MAX_SCREEN_HEIGHT / 2];
@@ -101,7 +101,7 @@ void fgDrawLine(int x0, int y0, int x1, int y1) {
         delta += dx;
       }
       x++;
-      printf("draw_pixel %d %d\n",x,y);
+      //printf("draw_pixel %d %d\n",x,y);
       DRAW_PIXEL( x, y );
     }
   } else {
@@ -126,7 +126,7 @@ void fgDrawLine(int x0, int y0, int x1, int y1) {
 void fgSetColor(int r, int g, int b) {
   //current_color = (r+r+r+b+g+g+g+g)>>3; //Fast Luminosity 8-bit
   current_color = (r+r+r+b+g+g+g+g)>>6; //Fast Luminosity 4-bit
-  printf("fgSetColor:%d\n",current_color);
+  //printf("fgSetColor:%d\n",current_color);
 }
 
 /*
@@ -134,7 +134,7 @@ void fgSetColor(int r, int g, int b) {
  * current color.
  */
 void fgDrawPixel(int x0, int y0) {
-  printf("fgDrawPixel\n");
+  //printf("fgDrawPixel\n");
   //if ( CHECK_CLIP(x0, y0) ) 
     DRAW_PIXEL( x0, y0 );
 }

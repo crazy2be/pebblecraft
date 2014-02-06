@@ -30,6 +30,18 @@
 #include <stdint.h>
 #include <stddef.h>
 
+// Using fixed point sll math library for GLfloat,GLdouble
+#define USE_FIXED_POINT 1
+//#undef __arm__
+#ifdef __arm__
+  #pragma message "__arm__ enabled"
+#endif
+#include "math-sll.h"
+
+typedef sll GLfloat;
+typedef sll GLdouble;
+typedef sll GLclampf;
+
 typedef enum tagminiGLErrNum {
 	miniGLErrNone		=  0,
 	miniGLErrParam		= -1,
@@ -40,13 +52,13 @@ typedef int Err;
 
 extern uint32_t miniGLLibRef;
 
-#define MAX_SCREEN_WIDTH        160
-#define MAX_SCREEN_HEIGHT       160
-#define MAX_VERTICES            30
+#define MAX_SCREEN_WIDTH        144
+#define MAX_SCREEN_HEIGHT       168
+#define MAX_VERTICES            6 //30
 #define PI                      3.1415926
 #define GOURAUD                 0x450
 #define PHONG                   0x451
-#define MAX_MAT_STACK_MODV      32
+#define MAX_MAT_STACK_MODV      2//32
 #define MAX_MAT_STACK_PROJ      2
 
 /**
@@ -134,13 +146,13 @@ extern uint32_t miniGLLibRef;
 /**
  * Typedefs for miniGL
  */
-typedef float GLfloat;
-typedef float GLclampf;
+//typedef float GLfloat;
+//typedef float GLclampf;
 typedef int GLint;
 typedef int GLsizei;
 typedef char GLbyte;
 typedef short GLshort;
-typedef double GLdouble;
+//typedef double GLdouble;
 typedef unsigned char GLubyte;
 typedef unsigned long GLbitfield;
 typedef unsigned long GLenum;

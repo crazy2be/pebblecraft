@@ -3,10 +3,22 @@
 #include "mine.h"
 #ifdef SDL
   #include <GL/gl.h>
+  // Using fixed point sll math library for GLfloat,GLdouble
+  // just wrapper for x86 with fixedpoint off
+  #undef USE_FIXED_POINT
+  #include "math-sll.h"
+  typedef sll GLfloat;
+  typedef sll GLdouble;
+  typedef sll GLclampf;
 #else
   #include "miniGL.h"
   #define GL_COLOR_BUFFER_BIT GL_COLOR
 #endif
+
+//Evil hack for softfloat workarounds
+//#include <miniGL/llvm_llsr.c>
+//#include <miniGL/llvm_extendsfdf2.c>
+extern double llvm_extendsfdf2(float a);
 
 #ifdef DESKTOP
 #include <stdio.h>
@@ -15,12 +27,13 @@
 #endif
 
 void gl_init() {
-  glViewport(0,0,144,168);
+  glViewport(0,0,144,144);
 
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
 
-  glOrtho(-72, 72, -84, 84, -144, 30.0);
+  glOrtho(int2sll(-72), int2sll(72), 
+    int2sll(-72), int2sll(72), int2sll(-144), int2sll(30));
 
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
@@ -34,9 +47,9 @@ void gl_init() {
   //gluPerspective(40.0, 1.4, -100.0, 0.0);
 
 
-  GLfloat amb[4] = {0.3, 0.3, 0.3, 0};
-  GLfloat dif[4] = {1,1,1,0};
-  GLfloat lightpos[] = {30.0, 64.0, -34.0, 1};
+  GLfloat amb[4] = {dbl2sll(0.3), dbl2sll(0.3), dbl2sll(0.3), int2sll(0)};
+  GLfloat dif[4] = {int2sll(1),int2sll(1),int2sll(1),int2sll(0)};
+  GLfloat lightpos[] = {int2sll(30), int2sll(64), int2sll(-34), int2sll(1)};
   glLightfv(GL_LIGHT0,GL_POSITION,lightpos);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, dif);
   glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
@@ -50,14 +63,10 @@ void gl_init() {
 }
 
 void gl_drawframe(uint8_t* model) {
-  static float vx = 0, vy = 0, vz = 0;
   int triangle_count = *(int*)&model[80];
-  glClearColor(0.0,0.0,0.0,0.0);
+  glClearColor(int2sll(0),int2sll(0),int2sll(0),int2sll(0));
   glClear(GL_COLOR_BUFFER_BIT);
-  vx += (float)(rand() % 100)/10.0;
-  vy += (float)(rand() % 100)/10.0;
-  vz += (float)(rand() % 100)/10.0;
-  glRotatef(10.0, 1.0, 1.0, 1.0);
+  glRotatef(int2sll(10), int2sll(1), int2sll(1), int2sll(1));
   for (int i = 0; i < triangle_count; i++){
     struct stl_data stl = *(struct stl_data*)&model[80 + 4 + i*sizeof(stl)];
 //     float red   = (   stl.color & 0x001F )        / 31.0;
@@ -76,12 +85,24 @@ void gl_drawframe(uint8_t* model) {
 //       stl.vertex3[0],stl.vertex3[1],stl.vertex3[2]);
 
     //glColor3f(red,green,blue);
-    glColor3f(1.0, 1.0, 1.0);
+    glColor3f(int2sll(1), int2sll(1), int2sll(1));
     glBegin(GL_POLYGON);
-    glNormal3f(stl.normal[0],stl.normal[1],stl.normal[2]);
-    glVertex3f(stl.vertex1[0], stl.vertex1[1], stl.vertex1[2]);
-    glVertex3f(stl.vertex2[0], stl.vertex2[1], stl.vertex2[2]);
-    glVertex3f(stl.vertex3[0], stl.vertex3[1], stl.vertex3[2]);
+    glNormal3f(
+      dbl2sll(llvm_extendsfdf2(stl.normal[0])),
+      dbl2sll(llvm_extendsfdf2(stl.normal[1])),
+      dbl2sll(llvm_extendsfdf2(stl.normal[2])));
+    glVertex3f(
+      dbl2sll(llvm_extendsfdf2(stl.vertex1[0])), 
+      dbl2sll(llvm_extendsfdf2(stl.vertex1[1])), 
+      dbl2sll(llvm_extendsfdf2(stl.vertex1[2])));
+    glVertex3f(
+      dbl2sll(llvm_extendsfdf2(stl.vertex2[0])), 
+      dbl2sll(llvm_extendsfdf2(stl.vertex2[1])), 
+      dbl2sll(llvm_extendsfdf2(stl.vertex2[2])));
+    glVertex3f(
+      dbl2sll(llvm_extendsfdf2(stl.vertex3[0])), 
+      dbl2sll(llvm_extendsfdf2(stl.vertex3[1])), 
+      dbl2sll(llvm_extendsfdf2(stl.vertex3[2])));
     glEnd();
   }
   glFlush();

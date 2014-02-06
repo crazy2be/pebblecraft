@@ -31,20 +31,25 @@
 #define printf(...)
 #endif
 
-#define W 1
-#define EPSILON 0.02
-
-#include "miniGL.h"
+#include "miniGL.h" //pulls in sllmath for GLfloat GLdouble
 #include "fastgraph.h"
-#include "fastmath.h"
+//#include "fastmath.h"
 #include <stdint.h>
+
+#define W 1 //used for integer calcs
+#define EPSILON dbl2sll(0.02)
+
+// Convenience function
+sll slladd_4(sll a, sll b, sll c, sll d){
+  return slladd(slladd(a, b), slladd(c, d));
+}
 
 // The global structure for this library
 uint32_t refcount;
 
 // float modv_matrix[MAX_MAT_STACK_MODV][16];
 // char  modv_level;
-float proj_matrix[MAX_MAT_STACK_PROJ][16];
+GLfloat proj_matrix[MAX_MAT_STACK_PROJ][16];
 char  proj_level;
 
 GLfloat cur_matrix[16];
@@ -68,7 +73,8 @@ int wireframe;
 int greyscale_mode;
 GLenum cur_mode;
 GLenum matrix_mode;
-Light lights[8];
+Light lights[1];//8];
+#define NUM_LIGHTS 1
 // End global structure
 
 /**
@@ -82,63 +88,20 @@ void miniGL_init(void) {
 //   modv_level = 0;
   proj_level = 0;
   for (int i=0;i<16;i++) {
-    cur_matrix[i] = 0.0;
-    per_matrix[i] = 0.0;
-    scr_matrix[i] = 0.0;
+    cur_matrix[i] = int2sll(0);
+    per_matrix[i] = int2sll(0);
+    scr_matrix[i] = int2sll(0);
   }
   num_vertices = 0;
   two_created = 0;
   lighting = 0;
-  for (int i=0;i<8;i++) {
+  for (int i=0;i<NUM_LIGHTS;i++) {
     lights[i].enabled = 0;
   }
   screen_startx = 0;
   screen_starty = 0;
   screen_width = MAX_SCREEN_WIDTH;
   screen_height = MAX_SCREEN_HEIGHT;
-}
-
-typedef float fixed;
-
-#define ITF(x) ((GLfloat)(x))
-#define FTI(x) ((int)(x))
-
-fixed DTF(GLfloat f) {
-  return f;
-}
-
-float FTD(fixed fix) {
-  return fix;
-}
-
-fixed fixmul(fixed a, fixed b) {
-  return a * b;
-}
-
-fixed fixdiv(fixed a, fixed b) {
-  return a / b;
-}
-
-#define flt GLfloat
-
-flt mul(flt a, flt b) {
-  return a * b;
-}
-
-flt div(flt a, flt b) {
-  return a / b;
-}
-
-flt add(flt a, flt b) {
-  return a + b;
-}
-
-flt add4(flt a, flt b, flt c, flt d) {
-  return add(add(a, b), add(c, d));
-}
-
-flt sub(flt a, flt b) {
-  return a - b;
 }
 
 /**
@@ -148,7 +111,7 @@ flt sub(flt a, flt b) {
  * p - input 4x1 vector
  * ret - output 4x1 matrix
  */
-void MatrixMultVector(const fixed *m, const GLfloat *p, GLfloat *ret) {
+void MatrixMultVector(const GLfloat *m, const GLfloat *p, GLfloat *ret) {
   GLfloat p0,p1,p2,p3;
 
   p0 = p[0];
@@ -156,10 +119,26 @@ void MatrixMultVector(const fixed *m, const GLfloat *p, GLfloat *ret) {
   p2 = p[2];
   p3 = p[3];
 
-  ret[0] = add4(mul(m[0], p0), mul(m[4], p1), mul(m[8], p2), mul(m[12], p3));
-  ret[1] = add4(mul(m[1], p0), mul(m[5], p1), mul(m[9], p2), mul(m[13], p3));
-  ret[2] = add4(mul(m[2], p0), mul(m[6], p1), mul(m[10], p2), mul(m[14], p3));
-  ret[3] = add4(mul(m[3], p0), mul(m[7], p1), mul(m[11], p2), mul(m[15], p3));
+  ret[0] = slladd_4(
+    sllmul(m[0], p0), 
+    sllmul(m[4], p1), 
+    sllmul(m[8], p2), 
+    sllmul(m[12], p3));
+  ret[1] = slladd_4(
+    sllmul(m[1], p0), 
+    sllmul(m[5], p1), 
+    sllmul(m[9], p2), 
+    sllmul(m[13], p3));
+  ret[2] = slladd_4(
+    sllmul(m[2], p0), 
+    sllmul(m[6], p1), 
+    sllmul(m[10], p2), 
+    sllmul(m[14], p3));
+  ret[3] = slladd_4(
+    sllmul(m[3], p0), 
+    sllmul(m[7], p1), 
+    sllmul(m[11], p2), 
+    sllmul(m[15], p3));
 }
 
 /**
@@ -167,7 +146,7 @@ void MatrixMultVector(const fixed *m, const GLfloat *p, GLfloat *ret) {
  */
 void VectorMinusVector(const GLfloat *p1, const GLfloat *p0, GLfloat *v) {
   for (int i = 0; i < 4; i++) {
-    v[i] = p1[i] - p0[i];
+    v[i] = sllsub(p1[i], p0[i]);
   }
 }
 
@@ -175,47 +154,32 @@ void VectorMinusVector(const GLfloat *p1, const GLfloat *p0, GLfloat *v) {
  * returns the dot product of vectors v1 and v2.
  */
 GLfloat VectorDotVector(const GLfloat *v1, const GLfloat *v2) {
-  return add4(mul(v1[0], v2[0]), mul(v1[1], v2[1]),
-              mul(v1[2], v2[2]), mul(v1[3], v2[3]));
-}
-
-float fastInvSqrt(GLfloat x)
-{
-  // TODO: Need to make this work with fixed point?
-  GLfloat xhalf = 0.5f*x;
-  union
-  {
-    GLfloat x;
-    int i;
-  } u;
-  u.x = x;
-  u.i = 0x5f3759df - (u.i >> 1);
-  x = u.x * (1.5f - xhalf * u.x * u.x);
-  return x;
+  return slladd_4(sllmul(v1[0], v2[0]), sllmul(v1[1], v2[1]),
+              sllmul(v1[2], v2[2]), sllmul(v1[3], v2[3]));
 }
 
 void VectorNormalize(GLfloat *v) {
-  GLfloat l_sqr = add4(
-    mul(v[0], v[0]),
-    mul(v[1], v[1]),
-    mul(v[2], v[2]),
-    mul(v[3], v[3]));
-  GLfloat l_inv = fastInvSqrt(l_sqr);//1/Sqrt(l_sqr);
+  GLfloat l_sqr = slladd_4(
+    sllmul(v[0], v[0]),
+    sllmul(v[1], v[1]),
+    sllmul(v[2], v[2]),
+    sllmul(v[3], v[3]));
+  GLfloat l_inv = slldiv(int2sll(1), sllsqrt(l_sqr)); // ie. (1 / l_sqr)
 
-  v[0] = mul(v[0], l_inv);
-  v[1] = mul(v[1], l_inv);
-  v[2] = mul(v[2], l_inv);
-  v[3] = mul(v[3], l_inv);
+  v[0] = sllmul(v[0], l_inv);
+  v[1] = sllmul(v[1], l_inv);
+  v[2] = sllmul(v[2], l_inv);
+  v[3] = sllmul(v[3], l_inv);
 }
 
 /**
  * cross = c0 x c1 (cross product).
  */
 void VectorCrossVector(const GLfloat *v1, const GLfloat *v2, GLfloat *cross) {
-  cross[0] = v1[1]*v2[2] - v2[1]*v1[2];
-  cross[1] = v1[2]*v2[0] - v2[2]*v1[0];
-  cross[2] = v1[0]*v2[1] - v2[0]*v1[1];
-  cross[3] = 1;
+  cross[0] = sllsub(sllmul(v1[1], v2[2]), sllmul(v2[1], v1[2]));
+  cross[1] = sllsub(sllmul(v1[2], v2[0]), sllmul(v2[2], v1[0]));
+  cross[2] = sllsub(sllmul(v1[0], v2[1]), sllmul(v2[0], v1[1]));
+  cross[3] = int2sll(1);
 }
 
 /**
@@ -224,23 +188,23 @@ void VectorCrossVector(const GLfloat *v1, const GLfloat *v2, GLfloat *cross) {
  *
  * m - input 4x4 matrix 
  */
-void InitializeMatrix(fixed *m) {
+void InitializeMatrix(GLfloat *m) {
   int i;
 
   for (i=0;i<16;i++)
-    m[i] = 0.0;
+    m[i] = int2sll(0);
 
-  m[0] = 1;
-  m[5] = 1;
-  m[10] = 1;
-  m[15] = 1;
+  m[0] = int2sll(1);
+  m[5] = int2sll(1);
+  m[10] = int2sll(1);
+  m[15] = int2sll(1);
 }
 
-void MatrixToFixed(const GLfloat* d, fixed* f) {
+void MatrixToFixed(const GLfloat* d, GLfloat* f) {
   int i;
 
   for (i=0; i<16; i++)
-    f[i] = DTF(d[i]);
+    f[i] = d[i];
 }
 
 void glMultMatrixf(const GLfloat *input) {
@@ -254,14 +218,26 @@ void glMultMatrixf(const GLfloat *input) {
 
         /** 4x4 matrix multiplication */
         for (j=0;j<4;j++) {
-                result[0+j] = c[0+j]*m[0] + c[4+j]*m[1]
-                                        + c[8+j]*m[2] + c[12+j]*m[3];
-                result[4+j] = c[0+j]*m[4] + c[4+j]*m[5]
-                                        + c[8+j]*m[6] + c[12+j]*m[7];
-                result[8+j] = c[0+j]*m[8] + c[4+j]*m[9]
-                                        + c[8+j]*m[10] + c[12+j]*m[11];
-                result[12+j] = c[0+j]*m[12] + c[4+j]*m[13]
-                                        + c[8+j]*m[14] + c[12+j]*m[15];
+                result[0+j] = slladd_4(
+                  sllmul(c[0+j],  m[0]),
+                  sllmul(c[4+j],  m[1]),
+                  sllmul(c[8+j],  m[2]),
+                  sllmul(c[12+j], m[3]));
+                result[4+j] = slladd_4(
+                  sllmul(c[0+j],  m[4]),
+                  sllmul(c[4+j],  m[5]),
+                  sllmul(c[8+j],  m[6]),
+                  sllmul(c[12+j], m[7]));
+                result[8+j] = slladd_4(
+                  sllmul(c[0+j],  m[8]),
+                  sllmul(c[4+j],  m[9]),
+                  sllmul(c[8+j],  m[10]), 
+                  sllmul(c[12+j], m[11]));
+                result[12+j] = slladd_4(
+                  sllmul(c[0+j],  m[12]),
+                  sllmul(c[4+j],  m[13]),
+                  sllmul(c[8+j],  m[14]),
+                  sllmul(c[12+j], m[15]));
         }
 
         for (i=0;i<16;i++) {
@@ -291,7 +267,7 @@ void glLoadMatrixf(const GLfloat *m) {
  * matrix.  Same as InitializeMatrix(...) but uses the gl function name.
  */
 void glLoadIdentity(void) {
-  fixed *m;
+  GLfloat *m;
 
   m = cur_matrix;
 
@@ -306,7 +282,10 @@ void glLoadIdentity(void) {
  * Doesn't do anything right now since there are no colors.
  */
 void glClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
-  fgClearColor(red*255,green*255,blue*255);
+  fgClearColor(
+    int2sll(sllmul(red, 255)),
+    int2sll(sllmul(green, 255)),
+    int2sll(sllmul(blue, 255)));
 }
 
 /**
@@ -356,12 +335,12 @@ void glClear(GLbitfield mask) {
  */
 void glColor3f(GLfloat r, GLfloat g, GLfloat b) {
 
-  cur_color[0] = r*255;
-  cur_color[1] = g*255;
-  cur_color[2] = b*255;
-  cur_color[3] = 255;
+  cur_color[0] = sllmul(r, int2sll(255));
+  cur_color[1] = sllmul(g, int2sll(255));
+  cur_color[2] = sllmul(b, int2sll(255));
+  cur_color[3] = int2sll(255);
 
-  fgSetColor(r*255,g*255,b*255);
+  fgSetColor(sll2int(cur_color[0]), sll2int(cur_color[1]), sll2int(cur_color[2]));
 }
 
 /**
@@ -374,12 +353,12 @@ void glColor3f(GLfloat r, GLfloat g, GLfloat b) {
  */
 void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 
-  cur_color[0] = r*255;
-  cur_color[1] = g*255;
-  cur_color[2] = b*255;
-  cur_color[3] = a*255;
+  cur_color[0] = sllmul(r, int2sll(255));
+  cur_color[1] = sllmul(g, int2sll(255));
+  cur_color[2] = sllmul(b, int2sll(255));
+  cur_color[3] = sllmul(a, int2sll(255));
 
-  fgSetColor(r*255,g*255,b*255);
+  fgSetColor(sll2int(cur_color[0]), sll2int(cur_color[1]), sll2int(cur_color[2]));
 }
 
 /**
@@ -396,23 +375,20 @@ void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 void glOrtho(GLdouble left, GLdouble right,
     GLdouble bottom, GLdouble top, GLdouble near,
     GLdouble distant) {
-  GLfloat d;
 
-  GLfloat width = right - left;
-  GLfloat height = top - bottom;
+  GLfloat width = sllsub(right, left);
+  GLfloat height = sllsub(top, bottom);
 
-
-  d = 32000.0;
   InitializeMatrix(per_matrix);
-        per_matrix[10] = 0;
-        per_matrix[11] = (1.0/d);
+        per_matrix[10] = int2sll(0);
+        per_matrix[11] = slldiv(int2sll(1), int2sll(32000));
 
   InitializeMatrix(scr_matrix);
-  scr_matrix[0] = DTF((GLfloat)(screen_width) / width);
-  scr_matrix[5] = -DTF((GLfloat)(screen_height) / height);
-  scr_matrix[10] = 0;
-  scr_matrix[12] = ITF(screen_startx) + ITF(screen_width)/2;
-  scr_matrix[13] = ITF(screen_starty) + ITF(screen_height)/2;
+  scr_matrix[0] =  slldiv(int2sll(screen_width), width);
+  scr_matrix[5] = -slldiv(int2sll(screen_height), height);
+  scr_matrix[10] = int2sll(0);
+  scr_matrix[12] = int2sll(screen_startx + screen_width/2);
+  scr_matrix[13] = int2sll(screen_starty + screen_height/2);
 
 }
 
@@ -428,7 +404,7 @@ void glOrtho(GLdouble left, GLdouble right,
  */
 void gluOrtho2D(GLdouble left, GLdouble right, GLdouble bottom,
     GLdouble top) {
-  glOrtho(left, right, bottom, top, -1, 1);
+  glOrtho(left, right, bottom, top, int2sll(-1), int2sll(1));
 }
 
 /**
@@ -454,15 +430,16 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
  */
 void gluPerspective(GLdouble fovy,
     GLdouble aspect, GLdouble near, GLdouble distant) {
-  fixed *m;
-  fixed tmp_mat[16];
+  GLfloat *m;
+  GLfloat tmp_mat[16];
   GLfloat half_angle;
   GLfloat f, height, width;
 
-  half_angle = (GLfloat)(fovy > 0?fovy:45.0)*PI/360.0;
-  f = Cos(half_angle)/Sin(half_angle);
-        height = 2*near/f;
-  width  = height*(aspect > 0?aspect:1.0);
+  half_angle = fovy > int2sll(0) ? fovy : 
+    slldiv(sllmul(int2sll(45), CONST_PI), int2sll(360));
+  f = slldiv(sllcos(half_angle), sllsin(half_angle));
+  height = sllmul(int2sll(2), slldiv(near, f));
+  width  = sllmul(height, (aspect > int2sll(0) ? aspect : int2sll(1)));
 
 
   m = cur_matrix;
@@ -470,15 +447,15 @@ void gluPerspective(GLdouble fovy,
     return;
 
   InitializeMatrix(per_matrix);
-        (per_matrix)[10] = 0;
-        (per_matrix)[11] = (1.0/near);
+        (per_matrix)[10] = int2sll(0);
+        (per_matrix)[11] = slldiv(int2sll(1), near);
 
   InitializeMatrix(scr_matrix);
-  (scr_matrix)[0] = DTF((GLfloat)(screen_width) / width);
-  (scr_matrix)[5] = -DTF((GLfloat)(screen_height) / height);
-  (scr_matrix)[10] = 0;
-  (scr_matrix)[12] = ITF(screen_startx) + ITF(screen_width)/2;
-  (scr_matrix)[13] = ITF(screen_starty) + ITF(screen_height)/2;
+  (scr_matrix)[0] = slldiv(int2sll(screen_width), width);
+  (scr_matrix)[5] = -slldiv(int2sll(screen_height), height);
+  (scr_matrix)[10] = int2sll(0);
+  (scr_matrix)[12] = int2sll(screen_startx + screen_width/2);
+  (scr_matrix)[13] = int2sll(screen_starty + screen_height/2);
 
 }
 
@@ -496,7 +473,7 @@ void glBegin(GLenum mode) {
 /**
  * Special function for BackFacing
  */
-void MatrixMultVector2D(const fixed *m, const GLfloat *p, GLfloat *ret) {
+void MatrixMultVector2D(const GLfloat *m, const GLfloat *p, GLfloat *ret) {
   GLfloat p0, p1, p2, p3;
 
   p0 = p[0];
@@ -504,12 +481,21 @@ void MatrixMultVector2D(const fixed *m, const GLfloat *p, GLfloat *ret) {
   p2 = p[2];
   p3 = p[3];
 
-  ret[0] = FTD(fixmul(m[0], p0) + fixmul(m[4], p1) +
-    fixmul(m[8], p2) + fixmul(m[12], p3));
-  ret[1] = FTD(fixmul(m[1], p0) + fixmul(m[5], p1) +
-    fixmul(m[9], p2) + fixmul(m[13], p3));
-  ret[3] = FTD(fixmul(m[3], p0) + fixmul(m[7], p1) +
-    fixmul(m[11], p2) + fixmul(m[15], p3));
+  ret[0] = slladd_4(
+    sllmul(m[0],  p0),
+    sllmul(m[4],  p1),
+    sllmul(m[8],  p2),
+    sllmul(m[12], p3));
+  ret[1] = slladd_4(
+    sllmul(m[1],  p0),
+    sllmul(m[5],  p1),
+    sllmul(m[9],  p2),
+    sllmul(m[13], p3));
+  ret[3] = slladd_4(
+    sllmul(m[3],  p0),
+    sllmul(m[7],  p1),
+    sllmul(m[11], p2),
+    sllmul(m[15], p3));
 }
 
 /**
@@ -529,73 +515,70 @@ int BackFacing(int l, int m, int n) {
   /*VectorMinusVector(q1, q0, c0);
   VectorMinusVector(q2, q0, c1);*/
   /** Reduce size to keep from overflowing (/8) */
-  const fixed c00 = (DTF(q1[0]) - DTF(q0[0]))/8;
-  const fixed c01 = (DTF(q1[1]) - DTF(q0[1]))/8;
-  const fixed c10 = (DTF(q2[0]) - DTF(q0[0]))/8;
-  const fixed c11 = (DTF(q2[1]) - DTF(q0[1]))/8;
+  const GLfloat c00 = slldiv(sllsub(q1[0], q0[0]), 8);
+  const GLfloat c01 = slldiv(sllsub(q1[1], q0[1]), 8);
+  const GLfloat c10 = slldiv(sllsub(q2[0], q0[0]), 8);
+  const GLfloat c11 = slldiv(sllsub(q2[1], q0[1]), 8);
   /** Partial cross product replaces VectorCrossVector */
 
 
   /** Return (cross > 0) */
-  return fixmul(c00, c11) > fixmul(c10, c01);
+  return sllmul(c00, c11) > sllmul(c10, c01);
 }               
 
 void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
         RGBColorType *color1) {
-  GLfloat blaa[4] = {0.0,0.0,0.0,0.0};
-  GLfloat cosangle = 0.0f;
+  GLfloat blaa[4] = {int2sll(0),int2sll(0),int2sll(0),int2sll(0)};
+  GLfloat cosangle = int2sll(0);
 
 
   if (!lighting) {
-    color1->r = cur_color[0];
-    color1->g = cur_color[1];
-    color1->b = cur_color[2];
+    color1->r = sll2int(cur_color[0]);
+    color1->g = sll2int(cur_color[1]);
+    color1->b = sll2int(cur_color[2]);
 
 
     return;
   }
 
 
-  for (int i=0;i<8;i++) { /** Go through all eight lights */
+  for (int i=0;i<NUM_LIGHTS;i++) { /** Go through all eight lights */
     if (lights[i].enabled == 0)
       continue;
 
     VectorMinusVector(lights[i].position,
         pos, blaa);
 
-    printf("normal(%f,%f,%f,%f)\nblaa(%f,%f,%f,%f)\n",
-      normal[0], normal[1], normal[2], normal[3], 
-      blaa[0], blaa[1], blaa[2], blaa[3]);
+//    printf("normal(%f,%f,%f,%f)\nblaa(%f,%f,%f,%f)\n",
+//      normal[0], normal[1], normal[2], normal[3], 
+//      blaa[0], blaa[1], blaa[2], blaa[3]);
     VectorNormalize(normal);
     VectorNormalize(blaa);
-    printf("normal(%f,%f,%f,%f)\nblaa(%f,%f,%f,%f)\n",
-      normal[0], normal[1], normal[2], normal[3], 
-      blaa[0], blaa[1], blaa[2], blaa[3]);
+//    printf("normal(%f,%f,%f,%f)\nblaa(%f,%f,%f,%f)\n",
+//      normal[0], normal[1], normal[2], normal[3], 
+//      blaa[0], blaa[1], blaa[2], blaa[3]);
     cosangle = VectorDotVector(normal, blaa);
-    if (cosangle < 0) {
-      color1->r = cur_color[0]
-          * lights[i].ambient[0];
-      color1->g = cur_color[1]
-          * lights[i].ambient[1];
-      color1->b = cur_color[2]
-          * lights[i].ambient[2];
+    if (cosangle < int2sll(0)) {
+      color1->r = sll2int(sllmul(cur_color[0], lights[i].ambient[0]));
+      color1->g = sll2int(sllmul(cur_color[1], lights[i].ambient[1]));
+      color1->b = sll2int(sllmul(cur_color[2], lights[i].ambient[2]));
     } else {
-      color1->r = cur_color[0]
-          * (lights[i].ambient[0]
-          + (lights[i].diffuse[0]
-          * cosangle));
-      color1->g = cur_color[1]
-          * (lights[i].ambient[1]
-          + (lights[i].diffuse[1]
-          * cosangle));
-      color1->b = cur_color[2]
-          * (lights[i].ambient[2]
-          + (lights[i].diffuse[2]
-          * cosangle));
+      color1->r = sll2int(
+        sllmul(cur_color[0],
+          slladd(lights[i].ambient[0], 
+            sllmul(lights[i].diffuse[0], cosangle))));
+      color1->g = sll2int(
+          sllmul(cur_color[1],
+            slladd(lights[i].ambient[1], 
+              sllmul(lights[i].diffuse[1], cosangle))));
+      color1->b = sll2int(
+          sllmul(cur_color[2],
+            slladd(lights[i].ambient[2],
+              sllmul(lights[i].diffuse[2], cosangle))));
     }
-    printf("light_r:%d light_g:%d light_b:%d\n",color1->r,color1->g,color1->b);
-    printf(" ambient:%f diffuse:%f cosangle:%f\n",
-      lights[0].ambient[0], lights[0].diffuse[0], cosangle);
+    //printf("light_r:%d light_g:%d light_b:%d\n",color1->r,color1->g,color1->b);
+    //printf(" ambient:%f diffuse:%f cosangle:%f\n",
+    //  lights[0].ambient[0], lights[0].diffuse[0], cosangle);
   }
 
 }
@@ -642,32 +625,33 @@ void DrawScanLine(GLfloat *start, GLfloat *end, GLfloat *startnormal,
       /** Do lighting calc */
       DoLightingCalc(temp, normal, &color);
     } else {
+        int startval = sll2int(start[0]);
+        int endval = sll2int(end[0]);
         /** interpolate between color1 and color2 */
-        color.r = ((j-start[0])/(end[0]-start[0]))*color2.r
-      + (1-(j-start[0])/(end[0]-start[0]))*color1.r;
-        color.g = ((j-start[0])/(end[0]-start[0]))*color2.g
-      + (1-(j-start[0])/(end[0]-start[0]))*color1.g;
-        color.b = ((j-start[0])/(end[0]-start[0]))*color2.b
-      + (1-(j-start[0])/(end[0]-start[0]))*color1.b;
+        color.r = ((j-startval)/(endval-startval))*color2.r
+      + (1-(j-startval)/(endval-startval))*color1.r;
+        color.g = ((j-startval)/(endval-startval))*color2.g
+      + (1-(j-startval)/(endval-startval))*color1.g;
+        color.b = ((j-startval)/(endval-startval))*color2.b
+      + (1-(j-startval)/(endval-startval))*color1.b;
     }
 
     fgSetColor(color.r, color.g, color.b);
     // if (z bidness)
     //  do stuff
 
-    fgDrawPixel(j,start[1]);
+    fgDrawPixel(j,sll2int(start[1]));
   }
 #else
   /** Just draw the 2D scan line */
-  fgDrawLine(start[0], start[1], end[0], end[1]);
+  fgDrawLine(
+    sll2int(start[0]), sll2int(start[1]), 
+    sll2int(end[0]), sll2int(end[1]));
 #endif
 }
 
 void SetColor() {
-
-
-  fgSetColor(cur_color[0], cur_color[1], cur_color[2]);
-
+  fgSetColor(sll2int(cur_color[0]), sll2int(cur_color[1]), sll2int(cur_color[2]));
 }
 
 void TransformToScreen(const GLfloat* in, GLfloat* ret) {
@@ -680,12 +664,21 @@ void TransformToScreen(const GLfloat* in, GLfloat* ret) {
   p2 = in[2];
   p3 = in[3];
 
-  ret[0] = FTD(fixmul(m[0], p0) + fixmul(m[4], p1) +
-    fixmul(m[8], p2) + fixmul(m[12], p3));
-  ret[1] = FTD(fixmul(m[1], p0) + fixmul(m[5], p1) +
-    fixmul(m[9], p2) + fixmul(m[13], p3));
-  ret[2] = FTD(fixmul(m[2], p0) + fixmul(m[6], p1) +
-    fixmul(m[10], p2) + fixmul(m[14], p3));
+  ret[0] = slladd_4(
+    sllmul(m[0],  p0),
+    sllmul(m[4],  p1),
+    sllmul(m[8],  p2),
+    sllmul(m[12], p3));
+  ret[1] = slladd_4(
+    sllmul(m[1],  p0),
+    sllmul(m[5],  p1),
+    sllmul(m[9],  p2),
+    sllmul(m[13], p3));
+  ret[2] = slladd_4(
+    sllmul(m[2],  p0),
+    sllmul(m[6],  p1),
+    sllmul(m[10], p2),
+    sllmul(m[14], p3));
 
 }
 
@@ -700,6 +693,7 @@ void glEnd(void) {
       end[4];
   RGBColorType color1, color2;
   Line I, II;
+  oldi = 0;
 
 
   if (num_vertices < 2)
@@ -723,24 +717,25 @@ void glEnd(void) {
 
     /** Go from 4D back to 3D */
     for(j=0;j<4;j++) {
-      in1[j] = in1[j]/in1[3];
+      in1[j] = slldiv(in1[j], in1[3]);
     }
 
     /** Translate into screen coords */
     //TransformToScreen(in1, scr_vertices[i]);
 
-                MatrixMultVector(scr_matrix, in1, out1);
+    MatrixMultVector(scr_matrix, in1, out1);
 
-                /** Add the point to the final list */
-                for(j=0;j<4;j++) {
-                        scr_vertices[i][j] = out1[j];
-                }
+    /** Add the point to the final list */
+    for(j=0;j<4;j++) {
+      scr_vertices[i][j] = out1[j];
+    }
 
   }
   //MatrixMultVector(modv_matrix[modv_level], cur_normal, normal);
   MatrixMultVector(cur_matrix, cur_normal, normal);
 
   switch(cur_mode) {
+#if 0
     case GL_TRIANGLES:
       if (num_vertices < 3)
         break;
@@ -752,16 +747,16 @@ void glEnd(void) {
         if (culling && !BackFacing(j,j+1,j+2)) {
           for (o=j+1;o<(j+3);o++) {
             fgDrawLine(
-              scr_vertices[o-1][0],
-              scr_vertices[o-1][1],
-              scr_vertices[o][0],
-              scr_vertices[o][1]);
+              sll2int(scr_vertices[o-1][0]),
+              sll2int(scr_vertices[o-1][1]),
+              sll2int(scr_vertices[o][0]),
+              sll2int(scr_vertices[o][1]));
           }
           fgDrawLine(
-            scr_vertices[o-1][0],
-            scr_vertices[o-1][1],
-            scr_vertices[j][0],
-            scr_vertices[j][1]);
+            sll2int(scr_vertices[o-1][0]),
+            sll2int(scr_vertices[o-1][1]),
+            sll2int(scr_vertices[j][0]),
+            sll2int(scr_vertices[j][1]));
         }
         j+=3;
       }
@@ -775,10 +770,10 @@ void glEnd(void) {
 
       /** Draw first line between verts 0 and 1 */
       fgDrawLine(
-        scr_vertices[0][0],
-        scr_vertices[0][1],
-        scr_vertices[1][0],
-        scr_vertices[1][1]);
+        sll2int(scr_vertices[0][0]),
+        sll2int(scr_vertices[0][1]),
+        sll2int(scr_vertices[1][0]),
+        sll2int(scr_vertices[1][1]));
 
       /** Need to add culling support */
 
@@ -787,15 +782,15 @@ void glEnd(void) {
       while (o < num_vertices) {
 
         fgDrawLine(
-          scr_vertices[o][0],
-          scr_vertices[o][1],
-          scr_vertices[o-1][0],
-          scr_vertices[o-1][1]);
+          sll2int(scr_vertices[o][0]),
+          sll2int(scr_vertices[o][1]),
+          sll2int(scr_vertices[o-1][0]),
+          sll2int(scr_vertices[o-1][1]));
         fgDrawLine(
-          scr_vertices[o][0],
-          scr_vertices[o][1],
-          scr_vertices[o-2][0],
-          scr_vertices[o-2][1]);
+          sll2int(scr_vertices[o][0]),
+          sll2int(scr_vertices[o][1]),
+          sll2int(scr_vertices[o-2][0]),
+          sll2int(scr_vertices[o-2][1]));
 
         o++;
       }
@@ -809,14 +804,16 @@ void glEnd(void) {
 
       for(i=1; i < num_vertices; i++) {
         if (culling && !BackFacing(0,i-1,i)) {
-                                  fgDrawLine(scr_vertices[0][0],
-            scr_vertices[0][1],
-            scr_vertices[0][2],
-            scr_vertices[i][1]);
-          fgDrawLine(scr_vertices[i-1][0],
-            scr_vertices[i-1][1],
-            scr_vertices[i][0],
-            scr_vertices[i][1]);
+          fgDrawLine(
+            sll2int(scr_vertices[0][0]),
+            sll2int(scr_vertices[0][1]),
+            sll2int(scr_vertices[0][2]),
+            sll2int(scr_vertices[i][1]));
+          fgDrawLine(
+            sll2int(scr_vertices[i-1][0]),
+            sll2int(scr_vertices[i-1][1]),
+            sll2int(scr_vertices[i][0]),
+            sll2int(scr_vertices[i][1]));
         }
       }
       break;
@@ -835,16 +832,16 @@ void glEnd(void) {
         // draw bidness with j, j+1, j+2, j+3 vertices
           for (o=j+1;o<(j+4);o++) {
             fgDrawLine(
-              scr_vertices[o-1][0],
-              scr_vertices[o-1][1],
-              scr_vertices[o][0],
-              scr_vertices[o][1]);
+              sll2int(scr_vertices[o-1][0]),
+              sll2int(scr_vertices[o-1][1]),
+              sll2int(scr_vertices[o][0]),
+              sll2int(scr_vertices[o][1]));
           }
           fgDrawLine(
-            scr_vertices[o-1][0],
-            scr_vertices[o-1][1],
-            scr_vertices[j][0],
-            scr_vertices[j][1]);
+            sll2int(scr_vertices[o-1][0]),
+            sll2int(scr_vertices[o-1][1]),
+            sll2int(scr_vertices[j][0]),
+            sll2int(scr_vertices[j][1]));
         }
         j+=4;
       }
@@ -863,16 +860,18 @@ void glEnd(void) {
         break;
 
       for(i=1; i < num_vertices; i++) {
-                                fgDrawLine(scr_vertices[i-1][0],
-          scr_vertices[i-1][1],
-          scr_vertices[i][0],
-          scr_vertices[i][1]);
+        fgDrawLine(
+          sll2int(scr_vertices[i-1][0]),
+          sll2int(scr_vertices[i-1][1]),
+          sll2int(scr_vertices[i][0]),
+          sll2int(scr_vertices[i][1]));
       }
       /** Close the loop */
-      fgDrawLine(scr_vertices[i-1][0],
-        scr_vertices[i-1][1],
-        scr_vertices[0][0],
-        scr_vertices[0][1]);
+      fgDrawLine(
+        sll2int(scr_vertices[i-1][0]),
+        sll2int(scr_vertices[i-1][1]),
+        sll2int(scr_vertices[0][0]),
+        sll2int(scr_vertices[0][1]));
       break;
 
     case GL_LINES:
@@ -882,10 +881,11 @@ void glEnd(void) {
         break;
 
       for(i=1; i < num_vertices; i+=2) {
-                                fgDrawLine(scr_vertices[i-1][0],
-          scr_vertices[i-1][1],
-          scr_vertices[i][0],
-          scr_vertices[i][1]);
+        fgDrawLine(
+          sll2int(scr_vertices[i-1][0]),
+          sll2int(scr_vertices[i-1][1]),
+          sll2int(scr_vertices[i][0]),
+          sll2int(scr_vertices[i][1]));
       }
       break;
 
@@ -893,10 +893,11 @@ void glEnd(void) {
       SetColor();
 
       for(i=0; i < num_vertices; i++) {
-        fgDrawLine(scr_vertices[i][0],
-          scr_vertices[i][1],
-          scr_vertices[i][0],
-          scr_vertices[i][1]);
+        fgDrawLine(
+          sll2int(scr_vertices[i][0]),
+          sll2int(scr_vertices[i][1]),
+          sll2int(scr_vertices[i][0]),
+          sll2int(scr_vertices[i][1]));
       }
       break;
 
@@ -904,21 +905,24 @@ void glEnd(void) {
       SetColor();
 
       for(i=1; i < num_vertices; i++) {
-                                fgDrawLine(scr_vertices[i-1][0],
-          scr_vertices[i-1][1],
-          scr_vertices[i][0],
-          scr_vertices[i][1]);
+        fgDrawLine(
+          sll2int(scr_vertices[i-1][0]),
+          sll2int(scr_vertices[i-1][1]),
+          sll2int(scr_vertices[i][0]),
+          sll2int(scr_vertices[i][1]));
       }
       break;
-
+#endif
     /** Right now only GL_POLYGON is floodfilled and lit */
     case GL_POLYGON:
       if (num_vertices < 3)
         break;
 
+#if 0
       if (culling && BackFacing(0,1,2)) {
         break;
       }
+#endif
 
       /*
        * For now, floodfill is only applied to GL_POLYGON
@@ -929,19 +933,19 @@ void glEnd(void) {
       /** lighting calculation to get color */
       if(lighting){
         DoLightingCalc(vertices[0], normal, &color1);
-        fgSetColor(color1.r*255, color1.g*255, color1.b*255);
+        fgSetColor(color1.r, color1.g, color1.b);
       }
 
       /** find "highest" and "lowest" points in y dir */
       oldtopy = -1000;
       oldbottomy = 1000;
       for (i=0;i<num_vertices;i++) {
-        if (scr_vertices[i][1] > oldtopy) {
-          oldtopy = scr_vertices[i][1];
+        if (sll2int(scr_vertices[i][1]) > oldtopy) {
+          oldtopy = sll2int(scr_vertices[i][1]);
           oldi = i;
         }
-        if (scr_vertices[i][1] < oldbottomy) {
-          oldbottomy = scr_vertices[i][1];
+        if (sll2int(scr_vertices[i][1]) < oldbottomy) {
+          oldbottomy = sll2int(scr_vertices[i][1]);
         }
       }
 
@@ -951,23 +955,23 @@ void glEnd(void) {
       /** Set first set of boundary lines */
       I.start = (oldi) % n;
       I.end = (oldi+1) % n;
-      I.x1 = scr_vertices[I.start][0];
-      I.y1 = scr_vertices[I.start][1];
-      I.z1 = scr_vertices[I.start][2];
-      I.m = (GLfloat)(scr_vertices[I.end][1]-I.y1)
-          / (GLfloat)(scr_vertices[I.end][0]-I.x1);
-      I.mz = (GLfloat)(scr_vertices[I.end][1]-I.y1)
-          / (GLfloat)(scr_vertices[I.end][2]-I.z1);
+      I.x1 = sll2int(scr_vertices[I.start][0]);
+      I.y1 = sll2int(scr_vertices[I.start][1]);
+      I.z1 = sll2int(scr_vertices[I.start][2]);
+      I.m = slldiv(sllsub(scr_vertices[I.end][1], int2sll(I.y1)),
+          sllsub(scr_vertices[I.end][0], int2sll(I.x1)));
+      I.mz = slldiv(sllsub(scr_vertices[I.end][1], int2sll(I.y1)),
+          sllsub(scr_vertices[I.end][2], int2sll(I.z1)));
 
       II.start = (oldi) % n;
       II.end = (oldi+n-1) % n;
-      II.x1 = scr_vertices[II.start][0];
-      II.y1 = scr_vertices[II.start][1];
-      II.z1 = scr_vertices[II.start][2];
-      II.m = (GLfloat)(scr_vertices[II.end][1]-II.y1)
-           / (GLfloat)(scr_vertices[II.end][0]-II.x1);
-      II.mz = (GLfloat)(scr_vertices[II.end][1]-II.y1)
-           / (GLfloat)(scr_vertices[II.end][2]-II.z1);
+      II.x1 = sll2int(scr_vertices[II.start][0]);
+      II.y1 = sll2int(scr_vertices[II.start][1]);
+      II.z1 = sll2int(scr_vertices[II.start][2]);
+      II.m = slldiv(sllsub(scr_vertices[II.end][1], int2sll(II.y1)),
+           sllsub(scr_vertices[II.end][0], int2sll(II.x1)));
+      II.mz = slldiv(sllsub(scr_vertices[II.end][1], int2sll(II.y1)),
+           sllsub(scr_vertices[II.end][2], int2sll(II.z1)));
 
       /** Loop over all y values between "top" and "bottom" */
       for (y = oldtopy-1; y > oldbottomy; y--) {
@@ -976,51 +980,47 @@ void glEnd(void) {
           start[0] = scr_vertices[I.end][0];
           start[2] = scr_vertices[I.end][2];
         } else {
-          start[0] = I.x1
-                 + (int)((GLfloat)(y-I.y1)/I.m);
-          start[2] = I.z1
-                 + (int)((GLfloat)(y-I.y1)/I.mz);
+          start[0] = int2sll(I.x1 + sll2int(slldiv(int2sll(y-I.y1), I.m )));
+          start[2] = int2sll(I.z1 + sll2int(slldiv(int2sll(y-I.y1), I.mz)));
         }
         if (II.m > -EPSILON && II.m < EPSILON) {
           end[0] = scr_vertices[II.end][0];
           end[2] = scr_vertices[II.end][2];
         } else {
-          end[0] = II.x1
-               + (int)((GLfloat)(y-II.y1)/II.m);
-          end[2] = II.z1
-               + (int)((GLfloat)(y-II.y1)/II.mz);
+          end[0] = int2sll(II.x1 + sll2int(slldiv(int2sll(y-II.y1), II.m )));
+          end[2] = int2sll(II.z1 + sll2int(slldiv(int2sll(y-II.y1), II.mz)));
         }
-        start[1] = y;
-        start[3] = 1;
-        end[1] = y;
-        end[3] = 1;
+        start[1] = int2sll(y);
+        start[3] = int2sll(1);
+        end[1] = int2sll(y);
+        end[3] = int2sll(1);
         DrawScanLine(start, end, normal, normal,
             GOURAUD);
 
         /** Check if the boundary lines should change */
-        tempy = scr_vertices[I.end][1];
+        tempy = sll2int(scr_vertices[I.end][1]);
         if (y>=tempy-W && y<=tempy+W) {
           /** change I */
           oldi++;
           I.start = I.end;
           I.end = (I.end+1) % n;
-          I.x1 = scr_vertices[I.start][0];
-          I.y1 = scr_vertices[I.start][1];
-          I.m = (GLfloat)
-            (scr_vertices[I.end][1]-I.y1)/
-            (GLfloat)
-            (scr_vertices[I.end][0]-I.x1);
+          I.x1 = sll2int(scr_vertices[I.start][0]);
+          I.y1 = sll2int(scr_vertices[I.start][1]);
+          I.m = slldiv(
+            sllsub(scr_vertices[I.end][1], int2sll(I.y1)),
+            sllsub(scr_vertices[I.end][0], int2sll(I.x1)));
         }
 
-        tempy = scr_vertices[II.end][1];
+        tempy = sll2int(scr_vertices[II.end][1]);
         if (y>=tempy-W && y<=tempy+W) {
           /** change II */
           II.start = II.end;
           II.end = (II.end+n-1) % n;
-          II.x1 = scr_vertices[II.start][0];
-          II.y1 = scr_vertices[II.start][1];
-          II.m = (GLfloat) (scr_vertices[II.end][1]-II.y1)/
-            (GLfloat) (scr_vertices[II.end][0]-II.x1);
+          II.x1 = sll2int(scr_vertices[II.start][0]);
+          II.y1 = sll2int(scr_vertices[II.start][1]);
+          II.m = slldiv(
+            sllsub(scr_vertices[II.end][1], int2sll(II.y1)),
+            sllsub(scr_vertices[II.end][0], int2sll(II.x1)));
         }
       }
       }
@@ -1029,15 +1029,17 @@ void glEnd(void) {
       if (wireframe) {
         //fgSetColor(0,0,0);
         for (i=1;i<num_vertices;i++) {
-          fgDrawLine(scr_vertices[i-1][0],
-            scr_vertices[i-1][1],
-            scr_vertices[i][0],
-            scr_vertices[i][1]);
+          fgDrawLine(
+            sll2int(scr_vertices[i-1][0]),
+            sll2int(scr_vertices[i-1][1]),
+            sll2int(scr_vertices[i][0]),
+            sll2int(scr_vertices[i][1]));
         }
-        fgDrawLine(scr_vertices[i-1][0],
-          scr_vertices[i-1][1],
-          scr_vertices[0][0],
-          scr_vertices[0][1]);
+        fgDrawLine(
+          sll2int(scr_vertices[i-1][0]),
+          sll2int(scr_vertices[i-1][1]),
+          sll2int(scr_vertices[0][0]),
+          sll2int(scr_vertices[0][1]));
       }
       break;
 
@@ -1101,7 +1103,7 @@ void glVertex3f(GLfloat x, GLfloat y, GLfloat z) {
     vertices[num_vertices][0] = x;
     vertices[num_vertices][1] = y;
     vertices[num_vertices][2] = z;
-    vertices[num_vertices][3] = 1.0;
+    vertices[num_vertices][3] = int2sll(1);
 
     for (i=0;i<4;i++) {
       vertices_color[num_vertices][i]
@@ -1119,7 +1121,7 @@ void glVertex3f(GLfloat x, GLfloat y, GLfloat z) {
  *
  */
 void glVertex2f(GLfloat x, GLfloat y) {
-        glVertex3f(x, y, 0.0);
+        glVertex3f(x, y, int2sll(0));
 }
 
 /**
@@ -1135,31 +1137,31 @@ void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) {
         GLfloat t[16];
         GLdouble theta;
 
-  theta = (angle/180.0) * PI;
+  theta = sllmul(slldiv(angle, int2sll(180)), CONST_PI);
 
         InitializeMatrix(t);
 
-        if (z == 1) {
-                t[0] = Cos(theta);
-                t[4] = -Sin(theta);
-                t[1] = Sin(theta);
-                t[5] = Cos(theta);
-                t[10] = 1;
-                t[15] = 1;
-        } else if (y == 1) {
-                t[0] = Cos(theta);
-                t[2] = -Sin(theta);
-                t[8] = Sin(theta);
-                t[10] = Cos(theta);
-                t[5] = 1;
-                t[15] = 1;
-        } else if (x == 1) {
-                t[5] = Cos(theta);
-                t[6] = Sin(theta);
-                t[9] = -Sin(theta);
-                t[10] = Cos(theta);
-                t[0] = 1;
-                t[15] = 1;
+        if (sll2int(z) == 1) {
+                t[0] = sllcos(theta);
+                t[4] = -sllsin(theta);
+                t[1] = sllsin(theta);
+                t[5] = sllcos(theta);
+                t[10] = int2sll(1);
+                t[15] = int2sll(1);
+        } else if (sll2int(y) == 1) {
+                t[0] = sllcos(theta);
+                t[2] = -sllsin(theta);
+                t[8] = sllsin(theta);
+                t[10] = sllcos(theta);
+                t[5] = int2sll(1);
+                t[15] = int2sll(1);
+        } else if (sll2int(x) == 1) {
+                t[5] = sllcos(theta);
+                t[6] = sllsin(theta);
+                t[9] = -sllsin(theta);
+                t[10] = sllcos(theta);
+                t[0] = int2sll(1);
+                t[15] = int2sll(1);
         }
 
         glMultMatrixf(t);
@@ -1172,8 +1174,8 @@ void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) {
  * x,y,z - values to scale in the x, y, and z directions
  */
 void glScalef(GLfloat x, GLfloat y, GLfloat z) {
-  fixed *m;
-  fixed t[16];
+  GLfloat *m;
+  GLfloat t[16];
 
 
   m = cur_matrix;
@@ -1196,12 +1198,12 @@ void glScalef(GLfloat x, GLfloat y, GLfloat z) {
  * x, y, z - units to translate in 3D world space
  */
 void glTranslatef(GLfloat x, GLfloat y, GLfloat z) {
-  fixed *m;
-  fixed fx, fy, fz;
+  GLfloat *m;
+  GLfloat fx, fy, fz;
 
-  fx = DTF(x);
-  fy = DTF(y);
-  fz = DTF(z);
+  fx = x;
+  fy = y;
+  fz = z;
 
   m = cur_matrix;
   if (m == NULL)
@@ -1209,18 +1211,18 @@ void glTranslatef(GLfloat x, GLfloat y, GLfloat z) {
 
   /** Optimized for speed */
   /** 4x4 matrix multiplication */
-  m[0] += fixmul(fx, m[3]);
-  m[1] += fixmul(fy, m[3]);
-  m[2] += fixmul(fz, m[3]);
-  m[4] += fixmul(fx, m[7]);
-  m[5] += fixmul(fy, m[7]);
-  m[6] += fixmul(fz, m[7]);
-  m[8] += fixmul(fx, m[11]);
-  m[9] += fixmul(fy, m[11]);
-  m[10] += fixmul(fz, m[11]);
-  m[12] += fixmul(fx, m[15]);
-  m[13] += fixmul(fy, m[15]);
-  m[14] += fixmul(fz, m[15]);
+  m[0] = slladd(sllmul(fx, m[3]), m[0]);
+  m[1] = slladd(sllmul(fy, m[3]), m[1]);
+  m[2] = slladd(sllmul(fz, m[3]), m[2]);
+  m[4] = slladd(sllmul(fx, m[7]), m[4]);
+  m[5] = slladd(sllmul(fy, m[7]), m[5]);
+  m[6] = slladd(sllmul(fz, m[7]), m[6]);
+  m[8] = slladd(sllmul(fx, m[11]), m[8]);
+  m[9] = slladd(sllmul(fy, m[11]), m[9]);
+  m[10] = slladd(sllmul(fz, m[11]), m[10]);
+  m[12] = slladd(sllmul(fx, m[15]), m[12]);
+  m[13] = slladd(sllmul(fy, m[15]), m[13]);
+  m[14] = slladd(sllmul(fz, m[15]), m[14]);
 
 }
 
@@ -1246,7 +1248,7 @@ void glTranslatef(GLfloat x, GLfloat y, GLfloat z) {
 //
 // }
 //
-// void CopyMatrixFTF(const fixed* src, fixed* dst) {
+// void CopyMatrixFTF(const GLfloat* src, GLfloat* dst) {
 //   char i;
 //
 //   for (i=0; i < 16; i++)
@@ -1303,14 +1305,14 @@ void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz) {
   cur_normal[0] = nx;
   cur_normal[1] = ny;
   cur_normal[2] = nz;
-  cur_normal[3] = 1;
+  cur_normal[3] = int2sll(1);
 
 }
 
 void glEnable(GLenum cap) {
 
 
-  if (cap >= GL_LIGHT0 && cap <= GL_LIGHT7) {
+  if (cap == GL_LIGHT0){// && cap <= GL_LIGHT7) {
     lights[(cap - GL_LIGHT0)].enabled = 1;
   }
 
@@ -1328,7 +1330,7 @@ void glEnable(GLenum cap) {
 }
 
 void glDisable(GLenum cap) {
-  if (cap >= GL_LIGHT0 && cap <= GL_LIGHT7) {
+  if (cap == GL_LIGHT0) {// && cap <= GL_LIGHT7) {
     lights[(cap - GL_LIGHT0)].enabled = 0;
   }
 
@@ -1360,22 +1362,22 @@ void glLightfv(GLenum light, GLenum pname, const GLfloat *params) {
 
   switch(pname) {
     case GL_AMBIENT:
-      for (i=0;i<4;i++) {
+      for (i=0;i<NUM_LIGHTS;i++) {
         lights[light-GL_LIGHT0].ambient[i] = params[i];
       }
       break;
     case GL_DIFFUSE:
-      for (i=0;i<4;i++) {
+      for (i=0;i<NUM_LIGHTS;i++) {
         lights[light-GL_LIGHT0].diffuse[i] = params[i];
       }
       break;
     case GL_SPECULAR:
-      for (i=0;i<4;i++) {
+      for (i=0;i<NUM_LIGHTS;i++) {
         lights[light-GL_LIGHT0].specular[i]= params[i];
       }
       break;
     case GL_POSITION:
-      for (i=0;i<4;i++) {
+      for (i=0;i<NUM_LIGHTS;i++) {
         lights[light-GL_LIGHT0].position[i]= params[i];
       }
       break;
@@ -1401,22 +1403,22 @@ void glGetLightfv(GLenum light, GLenum pname, GLfloat *params) {
 
   switch(pname) {
     case GL_AMBIENT:
-      for (i=0;i<4;i++) {
+      for (i=0;i<NUM_LIGHTS;i++) {
         params[i] = lights[light-GL_LIGHT0].ambient[i];
       }
       break;
     case GL_DIFFUSE:
-      for (i=0;i<4;i++) {
+      for (i=0;i<NUM_LIGHTS;i++) {
         params[i] = lights[light-GL_LIGHT0].diffuse[i];
       }
       break;
     case GL_SPECULAR:
-      for (i=0;i<4;i++) {
+      for (i=0;i<NUM_LIGHTS;i++) {
         params[i] = lights[light-GL_LIGHT0].specular[i];
       }
       break;
     case GL_POSITION:
-      for (i=0;i<4;i++) {
+      for (i=0;i<NUM_LIGHTS;i++) {
         params[i] = lights[light-GL_LIGHT0].position[i];
       }
       break;

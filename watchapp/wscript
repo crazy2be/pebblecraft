@@ -17,6 +17,24 @@ def configure(ctx):
 def build(ctx):
     ctx.load('pebble_sdk')
 
+    ctx.env.CFLAGS=['-std=c99',
+                        '-mcpu=cortex-m3',
+                        '-mthumb',
+                        '-ffunction-sections',
+                        '-fdata-sections',
+                        '-funroll-loops',
+                        '-g',
+                        '-Os',
+                        '-Wall',
+                        '-Wextra',
+                        #'-Werror',
+                        '-Wno-unused-parameter',
+                        '-Wno-error=unused-function',
+                        '-Wno-error=unused-variable' ]
+
+    #Needed for math-sll.h asm functions
+    ctx.env.CFLAGS.append('-Wa,-mimplicit-it=always')
+
     ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
                     target='pebble-app.elf')
 

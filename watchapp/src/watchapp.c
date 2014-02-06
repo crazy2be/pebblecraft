@@ -10,7 +10,7 @@ GRect bounds;
 uint16_t frame = 0;
 uint8_t* model_buf = NULL;
 
-extern uint8_t framebuffer[144*168 / 2];
+extern uint8_t framebuffer[144*144 / 2];
 static void register_timer(void* data);
 uint32_t frame_count = 0;
 
@@ -22,7 +22,7 @@ static void render_opengl(Layer* layer, GContext *ctx) {
 
   floyd_steinberg_dither(framebuffer, (uint8_t*)buf, -1);
 //   buf[0] = frame_count++;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Rendered frame %ud", (unsigned int)frame_count);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Rendered frame %ud", (unsigned int)frame_count);
   frame_count++;
 }
 
@@ -44,7 +44,8 @@ static void window_unload(Window *window) {}
 
 static void init(void) {
   window = window_create();
-  window_set_fullscreen(window, true);
+  //window_set_fullscreen(window, true);
+  window_set_background_color(window, GColorBlack);
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
     .unload = window_unload,
@@ -68,7 +69,7 @@ static void deinit(void) {
 int main(void) {
   init();
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window: %p", window);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window: %p", window);
 
   app_event_loop();
   deinit();
