@@ -27,7 +27,7 @@ static void render_opengl(Layer* layer, GContext *ctx) {
 }
 
 static void register_timer(void* data) {
-  app_timer_register(15, register_timer, data);
+  app_timer_register(60, register_timer, data);
   layer_mark_dirty(render_layer);
 }
 
