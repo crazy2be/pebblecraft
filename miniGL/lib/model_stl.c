@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "mine.h"
+#include "model_stl.h"
 #ifdef SDL
   #include <GL/gl.h>
   // Using fixed point sll math library for GLfloat,GLdouble

@@ -1,6 +1,6 @@
 #include <pebble.h>
 #include "dither.h"
-#include "miniGL/mine.h"
+#include "model_stl.h"
 
 static Window *window;
 static Layer *render_layer;
