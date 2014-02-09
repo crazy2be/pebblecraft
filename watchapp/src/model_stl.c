@@ -11,7 +11,7 @@
   typedef sll GLdouble;
   typedef sll GLclampf;
 #else
-  #include "miniGL.h"
+  #include "miniGL/miniGL.h"
   #define GL_COLOR_BUFFER_BIT GL_COLOR
 #endif
 
