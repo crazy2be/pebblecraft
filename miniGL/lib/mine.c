@@ -16,8 +16,8 @@
 #endif
 
 //Evil hack for softfloat workarounds
-//#include <miniGL/llvm_llsr.c>
-//#include <miniGL/llvm_extendsfdf2.c>
+//__extendsfdf2 pulls in all of ieee754-df.S (about 3164 bytes)
+//vs. 140 for just extendsfdf2
 extern double llvm_extendsfdf2(float a);
 
 #ifdef DESKTOP
@@ -27,13 +27,14 @@ extern double llvm_extendsfdf2(float a);
 #endif
 
 void gl_init() {
-  glViewport(0,0,144,144);
+  glViewport(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
 
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
 
+  //Invert y here, as pebble origin is top-left, opengl is bottom-left
   glOrtho(int2sll(-72), int2sll(72), 
-    int2sll(-72), int2sll(72), int2sll(-144), int2sll(30));
+    int2sll(72), int2sll(-72), int2sll(-144), int2sll(30));
 
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
@@ -43,7 +44,6 @@ void gl_init() {
   glEnable(GL_LIGHT0);
   glEnable(GL_CULL_FACE);
   glPolygonMode(GL_FRONT, GL_FILL);
-
   //gluPerspective(40.0, 1.4, -100.0, 0.0);
 
 
@@ -62,7 +62,9 @@ void gl_init() {
 #endif
 }
 
-void gl_drawframe(uint8_t* model) {
+void gl_drawframe(uint8_t* model, bool wireframe) {
+  glPolygonMode(GL_FRONT, (wireframe) ? GL_LINE : GL_FILL);
+
   int triangle_count = *(int*)&model[80];
   glClearColor(int2sll(0),int2sll(0),int2sll(0),int2sll(0));
   glClear(GL_COLOR_BUFFER_BIT);
@@ -105,5 +107,5 @@ void gl_drawframe(uint8_t* model) {
       dbl2sll(llvm_extendsfdf2(stl.vertex3[2])));
     glEnd();
   }
-  glFlush();
+  //glFlush();
 }

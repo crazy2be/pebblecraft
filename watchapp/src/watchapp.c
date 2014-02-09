@@ -4,26 +4,34 @@
 
 static Window *window;
 static Layer *render_layer;
+static bool wireframe = false;
 
-GRect bounds;
 
 uint16_t frame = 0;
 uint8_t* model_buf = NULL;
 
-extern uint8_t framebuffer[144*144 / 2];
+extern uint8_t framebuffer[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT / 2];
 static void register_timer(void* data);
-uint32_t frame_count = 0;
+
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  wireframe = !wireframe;
+}
+
+static void click_config_provider(void *context) {
+  window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
+}
+
 
 static void render_opengl(Layer* layer, GContext *ctx) {
   GBitmap* bitmap = (GBitmap*)ctx;
   uint32_t* buf = (uint32_t*)bitmap->addr;
+//  static uint16_t framecount = 0;
 
-  gl_drawframe(model_buf);
+  gl_drawframe(model_buf, wireframe);
 
   floyd_steinberg_dither(framebuffer, (uint8_t*)buf, -1);
-//   buf[0] = frame_count++;
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Rendered frame %ud", (unsigned int)frame_count);
-  frame_count++;
+//  APP_LOG(APP_LOG_LEVEL_DEBUG, "Rendered frame %ud", (unsigned int)frame_count);
+//  frame_count++;
 }
 
 static void register_timer(void* data) {
@@ -33,8 +41,7 @@ static void register_timer(void* data) {
 
 static void window_load(Window *window) {
   Layer* window_layer = window_get_root_layer(window);
-  bounds = layer_get_bounds(window_layer);
-  render_layer = layer_create(bounds);
+  render_layer = layer_create(layer_get_bounds(window_layer));
   layer_set_update_proc(render_layer, render_opengl);
   layer_add_child(window_layer, render_layer);
   register_timer(NULL);
@@ -43,9 +50,11 @@ static void window_load(Window *window) {
 static void window_unload(Window *window) {}
 
 static void init(void) {
+  light_enable(true);  // Leave the backlight on
   window = window_create();
   //window_set_fullscreen(window, true);
   window_set_background_color(window, GColorBlack);
+  window_set_click_config_provider(window, click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
     .unload = window_unload,
@@ -68,8 +77,6 @@ static void deinit(void) {
 
 int main(void) {
   init();
-
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window: %p", window);
 
   app_event_loop();
   deinit();

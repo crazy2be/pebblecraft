@@ -204,8 +204,6 @@
 extern "C" {
 #endif
 
-extern unsigned long long llvm_lshrdi3(unsigned long long a, int b);
-
 #ifndef USE_FIXED_POINT
 
 #include <math.h>
@@ -635,7 +633,7 @@ static __inline__ sll dbl2sll(double dbl)
 	/* Extract the exponent and align the decimals */
 	exp = (in.u[1] >> 20) & 0x7ff;
 	if (exp)
-    retval.ull = llvm_lshrdi3(retval.ull, 1053 - exp);//retval.ull >>= 1053 - exp;
+    retval.ull = retval.ull >> (1053 - exp);
 	else
 		return 0L;
 

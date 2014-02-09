@@ -100,8 +100,8 @@ void miniGL_init(void) {
   }
   screen_startx = 0;
   screen_starty = 0;
-  screen_width = MAX_SCREEN_WIDTH;
-  screen_height = MAX_SCREEN_HEIGHT;
+  screen_width = FRAMEBUFFER_WIDTH;
+  screen_height = FRAMEBUFFER_HEIGHT;
 }
 
 /**
@@ -155,7 +155,7 @@ void VectorMinusVector(const GLfloat *p1, const GLfloat *p0, GLfloat *v) {
  */
 GLfloat VectorDotVector(const GLfloat *v1, const GLfloat *v2) {
   return slladd_4(sllmul(v1[0], v2[0]), sllmul(v1[1], v2[1]),
-              sllmul(v1[2], v2[2]), sllmul(v1[3], v2[3]));
+    sllmul(v1[2], v2[2]), sllmul(v1[3], v2[3]));
 }
 
 void VectorNormalize(GLfloat *v) {
@@ -208,41 +208,41 @@ void MatrixToFixed(const GLfloat* d, GLfloat* f) {
 }
 
 void glMultMatrixf(const GLfloat *input) {
-        GLfloat result[16];
-        const GLfloat *c;
-        GLfloat *m;
-        int i,j;
+  GLfloat result[16];
+  const GLfloat *c;
+  GLfloat *m;
+  int i,j;
 
-        c = input;
-        m = cur_matrix;
+  c = input;
+  m = cur_matrix;
 
-        /** 4x4 matrix multiplication */
-        for (j=0;j<4;j++) {
-                result[0+j] = slladd_4(
-                  sllmul(c[0+j],  m[0]),
-                  sllmul(c[4+j],  m[1]),
-                  sllmul(c[8+j],  m[2]),
-                  sllmul(c[12+j], m[3]));
-                result[4+j] = slladd_4(
-                  sllmul(c[0+j],  m[4]),
-                  sllmul(c[4+j],  m[5]),
-                  sllmul(c[8+j],  m[6]),
-                  sllmul(c[12+j], m[7]));
-                result[8+j] = slladd_4(
-                  sllmul(c[0+j],  m[8]),
-                  sllmul(c[4+j],  m[9]),
-                  sllmul(c[8+j],  m[10]), 
-                  sllmul(c[12+j], m[11]));
-                result[12+j] = slladd_4(
-                  sllmul(c[0+j],  m[12]),
-                  sllmul(c[4+j],  m[13]),
-                  sllmul(c[8+j],  m[14]),
-                  sllmul(c[12+j], m[15]));
-        }
+  /** 4x4 matrix multiplication */
+  for (j=0;j<4;j++) {
+    result[0+j] = slladd_4(
+      sllmul(c[0+j],  m[0]),
+      sllmul(c[4+j],  m[1]),
+      sllmul(c[8+j],  m[2]),
+      sllmul(c[12+j], m[3]));
+    result[4+j] = slladd_4(
+      sllmul(c[0+j],  m[4]),
+      sllmul(c[4+j],  m[5]),
+      sllmul(c[8+j],  m[6]),
+      sllmul(c[12+j], m[7]));
+    result[8+j] = slladd_4(
+      sllmul(c[0+j],  m[8]),
+      sllmul(c[4+j],  m[9]),
+      sllmul(c[8+j],  m[10]), 
+      sllmul(c[12+j], m[11]));
+    result[12+j] = slladd_4(
+      sllmul(c[0+j],  m[12]),
+      sllmul(c[4+j],  m[13]),
+      sllmul(c[8+j],  m[14]),
+      sllmul(c[12+j], m[15]));
+  }
 
-        for (i=0;i<16;i++) {
-                m[i] = result[i];
-        }
+  for (i=0;i<16;i++) {
+    m[i] = result[i];
+  }
 }
 
 /**
@@ -252,7 +252,7 @@ void glMultMatrixf(const GLfloat *input) {
  * m - input 4x4 matrix
  */
 void glLoadMatrixf(const GLfloat *m) {
-        int i;
+  int i;
   GLfloat *c;
 
   c = cur_matrix;
@@ -298,9 +298,9 @@ void ZBufferInit() {
   /** create z-buffer */
   /** Only use scan-line zbuffer to save heap space */
   zbuffer = (GLubyte *) MemChunkNew(MemHeapID(0, 0),
-        MAX_SCREEN_WIDTH, // * MAX_SCREEN_HEIGHT,
-        memNewChunkFlagNonMovable);
-        /** remember to clear this */
+    FRAMEBUFFER_WIDTH, // * FRAMEBUFFER_HEIGHT,
+    memNewChunkFlagNonMovable);
+  /** remember to clear this */
 
   /** initialize to deepest values */
   for (j=0;j<160;j++) {
@@ -323,7 +323,7 @@ void glClear(GLbitfield mask) {
     return; /** anything else not supported now */
 
   fgClearWindow(screen_startx, screen_starty,
-      screen_width, screen_height);
+    screen_width, screen_height);
 }
 
 /**
@@ -373,15 +373,15 @@ void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
  * distant - back clipping plane
  */
 void glOrtho(GLdouble left, GLdouble right,
-    GLdouble bottom, GLdouble top, GLdouble near,
-    GLdouble distant) {
+  GLdouble bottom, GLdouble top, GLdouble near,
+  GLdouble distant) {
 
   GLfloat width = sllsub(right, left);
   GLfloat height = sllsub(top, bottom);
 
   InitializeMatrix(per_matrix);
-        per_matrix[10] = int2sll(0);
-        per_matrix[11] = slldiv(int2sll(1), int2sll(32000));
+  per_matrix[10] = int2sll(0);
+  per_matrix[11] = slldiv(int2sll(1), int2sll(32000));
 
   InitializeMatrix(scr_matrix);
   scr_matrix[0] =  slldiv(int2sll(screen_width), width);
@@ -403,7 +403,7 @@ void glOrtho(GLdouble left, GLdouble right,
  * top - world y coordinate of top edge of projection plane
  */
 void gluOrtho2D(GLdouble left, GLdouble right, GLdouble bottom,
-    GLdouble top) {
+  GLdouble top) {
   glOrtho(left, right, bottom, top, int2sll(-1), int2sll(1));
 }
 
@@ -429,14 +429,14 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
  * distant - back clipping plane world z value
  */
 void gluPerspective(GLdouble fovy,
-    GLdouble aspect, GLdouble near, GLdouble distant) {
+  GLdouble aspect, GLdouble near, GLdouble distant) {
   GLfloat *m;
   GLfloat tmp_mat[16];
   GLfloat half_angle;
   GLfloat f, height, width;
 
   half_angle = fovy > int2sll(0) ? fovy : 
-    slldiv(sllmul(int2sll(45), CONST_PI), int2sll(360));
+  slldiv(sllmul(int2sll(45), CONST_PI), int2sll(360));
   f = slldiv(sllcos(half_angle), sllsin(half_angle));
   height = sllmul(int2sll(2), slldiv(near, f));
   width  = sllmul(height, (aspect > int2sll(0) ? aspect : int2sll(1)));
@@ -447,8 +447,8 @@ void gluPerspective(GLdouble fovy,
     return;
 
   InitializeMatrix(per_matrix);
-        (per_matrix)[10] = int2sll(0);
-        (per_matrix)[11] = slldiv(int2sll(1), near);
+  (per_matrix)[10] = int2sll(0);
+  (per_matrix)[11] = slldiv(int2sll(1), near);
 
   InitializeMatrix(scr_matrix);
   (scr_matrix)[0] = slldiv(int2sll(screen_width), width);
@@ -513,7 +513,7 @@ int BackFacing(int l, int m, int n) {
 
   /** Then use cross product to find direction it's facing */
   /*VectorMinusVector(q1, q0, c0);
-  VectorMinusVector(q2, q0, c1);*/
+    VectorMinusVector(q2, q0, c1);*/
   /** Reduce size to keep from overflowing (/8) */
   const GLfloat c00 = slldiv(sllsub(q1[0], q0[0]), 8);
   const GLfloat c01 = slldiv(sllsub(q1[1], q0[1]), 8);
@@ -527,7 +527,7 @@ int BackFacing(int l, int m, int n) {
 }               
 
 void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
-        RGBColorType *color1) {
+  RGBColorType *color1) {
   GLfloat blaa[4] = {int2sll(0),int2sll(0),int2sll(0),int2sll(0)};
   GLfloat cosangle = int2sll(0);
 
@@ -547,7 +547,7 @@ void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
       continue;
 
     VectorMinusVector(lights[i].position,
-        pos, blaa);
+      pos, blaa);
 
 //    printf("normal(%f,%f,%f,%f)\nblaa(%f,%f,%f,%f)\n",
 //      normal[0], normal[1], normal[2], normal[3], 
@@ -568,13 +568,13 @@ void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
           slladd(lights[i].ambient[0], 
             sllmul(lights[i].diffuse[0], cosangle))));
       color1->g = sll2int(
-          sllmul(cur_color[1],
-            slladd(lights[i].ambient[1], 
-              sllmul(lights[i].diffuse[1], cosangle))));
+        sllmul(cur_color[1],
+          slladd(lights[i].ambient[1], 
+            sllmul(lights[i].diffuse[1], cosangle))));
       color1->b = sll2int(
-          sllmul(cur_color[2],
-            slladd(lights[i].ambient[2],
-              sllmul(lights[i].diffuse[2], cosangle))));
+        sllmul(cur_color[2],
+          slladd(lights[i].ambient[2],
+            sllmul(lights[i].diffuse[2], cosangle))));
     }
     //printf("light_r:%d light_g:%d light_b:%d\n",color1->r,color1->g,color1->b);
     //printf(" ambient:%f diffuse:%f cosangle:%f\n",
@@ -587,7 +587,7 @@ void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
  * Draw a line using the z-buffer and shading.
  */
 void DrawScanLine(GLfloat *start, GLfloat *end, GLfloat *startnormal,
-      GLfloat *endnormal, int mode) {
+  GLfloat *endnormal, int mode) {
   RGBColorType color1, color2, color;
   int ty, tx, tz;
   int i,j;
@@ -625,14 +625,14 @@ void DrawScanLine(GLfloat *start, GLfloat *end, GLfloat *startnormal,
       /** Do lighting calc */
       DoLightingCalc(temp, normal, &color);
     } else {
-        int startval = sll2int(start[0]);
-        int endval = sll2int(end[0]);
-        /** interpolate between color1 and color2 */
-        color.r = ((j-startval)/(endval-startval))*color2.r
+      int startval = sll2int(start[0]);
+      int endval = sll2int(end[0]);
+      /** interpolate between color1 and color2 */
+      color.r = ((j-startval)/(endval-startval))*color2.r
       + (1-(j-startval)/(endval-startval))*color1.r;
-        color.g = ((j-startval)/(endval-startval))*color2.g
+      color.g = ((j-startval)/(endval-startval))*color2.g
       + (1-(j-startval)/(endval-startval))*color1.g;
-        color.b = ((j-startval)/(endval-startval))*color2.b
+      color.b = ((j-startval)/(endval-startval))*color2.b
       + (1-(j-startval)/(endval-startval))*color1.b;
     }
 
@@ -658,7 +658,7 @@ void TransformToScreen(const GLfloat* in, GLfloat* ret) {
   GLfloat *m;
   GLfloat p0, p1, p2, p3;
 
-   m = scr_matrix;
+  m = scr_matrix;
   p0 = in[0];
   p1 = in[1];
   p2 = in[2];
@@ -687,10 +687,10 @@ void TransformToScreen(const GLfloat* in, GLfloat* ret) {
  */
 void glEnd(void) {
   int i, sx1, sx2, sy1, sy2, j, oldtopy, oldbottomy, oldi, oldj,
-    o, n, y, tempx, tempy, q;
+      o, n, y, tempx, tempy, q;
   GLfloat x1, y1, x2, y2, cosangle;
   GLfloat  p1[4], in1[4], out1[4], normal[4], start[4],
-      end[4];
+           end[4];
   RGBColorType color1, color2;
   Line I, II;
   oldi = 0;
@@ -736,200 +736,200 @@ void glEnd(void) {
 
   switch(cur_mode) {
 #if 0
-    case GL_TRIANGLES:
-      if (num_vertices < 3)
-        break;
+  case GL_TRIANGLES:
+    if (num_vertices < 3)
+      break;
 
-      SetColor();
+    SetColor();
 
-      j = 0;
-      while ((j+2) < num_vertices) {
-        if (culling && !BackFacing(j,j+1,j+2)) {
-          for (o=j+1;o<(j+3);o++) {
-            fgDrawLine(
-              sll2int(scr_vertices[o-1][0]),
-              sll2int(scr_vertices[o-1][1]),
-              sll2int(scr_vertices[o][0]),
-              sll2int(scr_vertices[o][1]));
-          }
+    j = 0;
+    while ((j+2) < num_vertices) {
+      if (culling && !BackFacing(j,j+1,j+2)) {
+        for (o=j+1;o<(j+3);o++) {
           fgDrawLine(
             sll2int(scr_vertices[o-1][0]),
             sll2int(scr_vertices[o-1][1]),
-            sll2int(scr_vertices[j][0]),
-            sll2int(scr_vertices[j][1]));
+            sll2int(scr_vertices[o][0]),
+            sll2int(scr_vertices[o][1]));
         }
-        j+=3;
-      }
-      break;
-
-    case GL_TRIANGLE_STRIP:
-      if (num_vertices < 3)
-        break;
-
-      SetColor();
-
-      /** Draw first line between verts 0 and 1 */
-      fgDrawLine(
-        sll2int(scr_vertices[0][0]),
-        sll2int(scr_vertices[0][1]),
-        sll2int(scr_vertices[1][0]),
-        sll2int(scr_vertices[1][1]));
-
-      /** Need to add culling support */
-
-      o = 2;
-      /** For each new vertex, draw two new triangle legs */
-      while (o < num_vertices) {
-
         fgDrawLine(
-          sll2int(scr_vertices[o][0]),
-          sll2int(scr_vertices[o][1]),
           sll2int(scr_vertices[o-1][0]),
-          sll2int(scr_vertices[o-1][1]));
+          sll2int(scr_vertices[o-1][1]),
+          sll2int(scr_vertices[j][0]),
+          sll2int(scr_vertices[j][1]));
+      }
+      j+=3;
+    }
+    break;
+
+  case GL_TRIANGLE_STRIP:
+    if (num_vertices < 3)
+      break;
+
+    SetColor();
+
+    /** Draw first line between verts 0 and 1 */
+    fgDrawLine(
+      sll2int(scr_vertices[0][0]),
+      sll2int(scr_vertices[0][1]),
+      sll2int(scr_vertices[1][0]),
+      sll2int(scr_vertices[1][1]));
+
+    /** Need to add culling support */
+
+    o = 2;
+    /** For each new vertex, draw two new triangle legs */
+    while (o < num_vertices) {
+
+      fgDrawLine(
+        sll2int(scr_vertices[o][0]),
+        sll2int(scr_vertices[o][1]),
+        sll2int(scr_vertices[o-1][0]),
+        sll2int(scr_vertices[o-1][1]));
+      fgDrawLine(
+        sll2int(scr_vertices[o][0]),
+        sll2int(scr_vertices[o][1]),
+        sll2int(scr_vertices[o-2][0]),
+        sll2int(scr_vertices[o-2][1]));
+
+      o++;
+    }
+    break;
+
+  case GL_TRIANGLE_FAN:
+    if (num_vertices < 3)
+      break;
+
+    SetColor();
+
+    for(i=1; i < num_vertices; i++) {
+      if (culling && !BackFacing(0,i-1,i)) {
         fgDrawLine(
-          sll2int(scr_vertices[o][0]),
-          sll2int(scr_vertices[o][1]),
-          sll2int(scr_vertices[o-2][0]),
-          sll2int(scr_vertices[o-2][1]));
-
-        o++;
-      }
-      break;
-
-    case GL_TRIANGLE_FAN:
-      if (num_vertices < 3)
-        break;
-
-      SetColor();
-
-      for(i=1; i < num_vertices; i++) {
-        if (culling && !BackFacing(0,i-1,i)) {
-          fgDrawLine(
-            sll2int(scr_vertices[0][0]),
-            sll2int(scr_vertices[0][1]),
-            sll2int(scr_vertices[0][2]),
-            sll2int(scr_vertices[i][1]));
-          fgDrawLine(
-            sll2int(scr_vertices[i-1][0]),
-            sll2int(scr_vertices[i-1][1]),
-            sll2int(scr_vertices[i][0]),
-            sll2int(scr_vertices[i][1]));
-        }
-      }
-      break;
-
-    case GL_QUADS:
-      if (num_vertices < 4)
-        break;
-
-      SetColor();
-
-      j = 0;
-      while ((j+3) < num_vertices) {
-
-        if (culling && !BackFacing(j,j+1,j+2)) {
-
-        // draw bidness with j, j+1, j+2, j+3 vertices
-          for (o=j+1;o<(j+4);o++) {
-            fgDrawLine(
-              sll2int(scr_vertices[o-1][0]),
-              sll2int(scr_vertices[o-1][1]),
-              sll2int(scr_vertices[o][0]),
-              sll2int(scr_vertices[o][1]));
-          }
-          fgDrawLine(
-            sll2int(scr_vertices[o-1][0]),
-            sll2int(scr_vertices[o-1][1]),
-            sll2int(scr_vertices[j][0]),
-            sll2int(scr_vertices[j][1]));
-        }
-        j+=4;
-      }
-      break;
-
-    case GL_QUAD_STRIP:
-      SetColor();
-
-      /** Do this */
-      break;
-
-    case GL_LINE_LOOP:
-      SetColor();
-
-      if (num_vertices < 1)
-        break;
-
-      for(i=1; i < num_vertices; i++) {
+          sll2int(scr_vertices[0][0]),
+          sll2int(scr_vertices[0][1]),
+          sll2int(scr_vertices[0][2]),
+          sll2int(scr_vertices[i][1]));
         fgDrawLine(
           sll2int(scr_vertices[i-1][0]),
           sll2int(scr_vertices[i-1][1]),
           sll2int(scr_vertices[i][0]),
           sll2int(scr_vertices[i][1]));
       }
-      /** Close the loop */
+    }
+    break;
+
+  case GL_QUADS:
+    if (num_vertices < 4)
+      break;
+
+    SetColor();
+
+    j = 0;
+    while ((j+3) < num_vertices) {
+
+      if (culling && !BackFacing(j,j+1,j+2)) {
+
+        // draw bidness with j, j+1, j+2, j+3 vertices
+        for (o=j+1;o<(j+4);o++) {
+          fgDrawLine(
+            sll2int(scr_vertices[o-1][0]),
+            sll2int(scr_vertices[o-1][1]),
+            sll2int(scr_vertices[o][0]),
+            sll2int(scr_vertices[o][1]));
+        }
+        fgDrawLine(
+          sll2int(scr_vertices[o-1][0]),
+          sll2int(scr_vertices[o-1][1]),
+          sll2int(scr_vertices[j][0]),
+          sll2int(scr_vertices[j][1]));
+      }
+      j+=4;
+    }
+    break;
+
+  case GL_QUAD_STRIP:
+    SetColor();
+
+    /** Do this */
+    break;
+
+  case GL_LINE_LOOP:
+    SetColor();
+
+    if (num_vertices < 1)
+      break;
+
+    for(i=1; i < num_vertices; i++) {
       fgDrawLine(
         sll2int(scr_vertices[i-1][0]),
         sll2int(scr_vertices[i-1][1]),
-        sll2int(scr_vertices[0][0]),
-        sll2int(scr_vertices[0][1]));
+        sll2int(scr_vertices[i][0]),
+        sll2int(scr_vertices[i][1]));
+    }
+    /** Close the loop */
+    fgDrawLine(
+      sll2int(scr_vertices[i-1][0]),
+      sll2int(scr_vertices[i-1][1]),
+      sll2int(scr_vertices[0][0]),
+      sll2int(scr_vertices[0][1]));
+    break;
+
+  case GL_LINES:
+    SetColor();
+
+    if (num_vertices < 1)
       break;
 
-    case GL_LINES:
-      SetColor();
+    for(i=1; i < num_vertices; i+=2) {
+      fgDrawLine(
+        sll2int(scr_vertices[i-1][0]),
+        sll2int(scr_vertices[i-1][1]),
+        sll2int(scr_vertices[i][0]),
+        sll2int(scr_vertices[i][1]));
+    }
+    break;
 
-      if (num_vertices < 1)
-        break;
+  case GL_POINTS:
+    SetColor();
 
-      for(i=1; i < num_vertices; i+=2) {
-        fgDrawLine(
-          sll2int(scr_vertices[i-1][0]),
-          sll2int(scr_vertices[i-1][1]),
-          sll2int(scr_vertices[i][0]),
-          sll2int(scr_vertices[i][1]));
-      }
-      break;
+    for(i=0; i < num_vertices; i++) {
+      fgDrawLine(
+        sll2int(scr_vertices[i][0]),
+        sll2int(scr_vertices[i][1]),
+        sll2int(scr_vertices[i][0]),
+        sll2int(scr_vertices[i][1]));
+    }
+    break;
 
-    case GL_POINTS:
-      SetColor();
+  case GL_LINE_STRIP:
+    SetColor();
 
-      for(i=0; i < num_vertices; i++) {
-        fgDrawLine(
-          sll2int(scr_vertices[i][0]),
-          sll2int(scr_vertices[i][1]),
-          sll2int(scr_vertices[i][0]),
-          sll2int(scr_vertices[i][1]));
-      }
-      break;
-
-    case GL_LINE_STRIP:
-      SetColor();
-
-      for(i=1; i < num_vertices; i++) {
-        fgDrawLine(
-          sll2int(scr_vertices[i-1][0]),
-          sll2int(scr_vertices[i-1][1]),
-          sll2int(scr_vertices[i][0]),
-          sll2int(scr_vertices[i][1]));
-      }
-      break;
+    for(i=1; i < num_vertices; i++) {
+      fgDrawLine(
+        sll2int(scr_vertices[i-1][0]),
+        sll2int(scr_vertices[i-1][1]),
+        sll2int(scr_vertices[i][0]),
+        sll2int(scr_vertices[i][1]));
+    }
+    break;
 #endif
     /** Right now only GL_POLYGON is floodfilled and lit */
-    case GL_POLYGON:
-      if (num_vertices < 3)
-        break;
+  case GL_POLYGON:
+    if (num_vertices < 3)
+      break;
 
 #if 0
-      if (culling && BackFacing(0,1,2)) {
-        break;
-      }
+    if (culling && BackFacing(0,1,2)) {
+      break;
+    }
 #endif
 
-      /*
-       * For now, floodfill is only applied to GL_POLYGON
-       * type for testing.
-       */
+    /*
+     * For now, floodfill is only applied to GL_POLYGON
+     * type for testing.
+     */
 
-      if (!wireframe) {
+    if (!wireframe) {
       /** lighting calculation to get color */
       if(lighting){
         DoLightingCalc(vertices[0], normal, &color1);
@@ -959,9 +959,9 @@ void glEnd(void) {
       I.y1 = sll2int(scr_vertices[I.start][1]);
       I.z1 = sll2int(scr_vertices[I.start][2]);
       I.m = slldiv(sllsub(scr_vertices[I.end][1], int2sll(I.y1)),
-          sllsub(scr_vertices[I.end][0], int2sll(I.x1)));
+        sllsub(scr_vertices[I.end][0], int2sll(I.x1)));
       I.mz = slldiv(sllsub(scr_vertices[I.end][1], int2sll(I.y1)),
-          sllsub(scr_vertices[I.end][2], int2sll(I.z1)));
+        sllsub(scr_vertices[I.end][2], int2sll(I.z1)));
 
       II.start = (oldi) % n;
       II.end = (oldi+n-1) % n;
@@ -969,12 +969,14 @@ void glEnd(void) {
       II.y1 = sll2int(scr_vertices[II.start][1]);
       II.z1 = sll2int(scr_vertices[II.start][2]);
       II.m = slldiv(sllsub(scr_vertices[II.end][1], int2sll(II.y1)),
-           sllsub(scr_vertices[II.end][0], int2sll(II.x1)));
+        sllsub(scr_vertices[II.end][0], int2sll(II.x1)));
       II.mz = slldiv(sllsub(scr_vertices[II.end][1], int2sll(II.y1)),
-           sllsub(scr_vertices[II.end][2], int2sll(II.z1)));
+        sllsub(scr_vertices[II.end][2], int2sll(II.z1)));
 
       /** Loop over all y values between "top" and "bottom" */
-      for (y = oldtopy-1; y > oldbottomy; y--) {
+      //used to be oldtopy -1 (got rid of seams, but 
+      //introduced flipped lines at random locations
+      for (y = oldtopy; y > oldbottomy; y--) {
         /** Draw one scanline */
         if (I.m > -EPSILON && I.m < EPSILON) {
           start[0] = scr_vertices[I.end][0];
@@ -991,11 +993,17 @@ void glEnd(void) {
           end[2] = int2sll(II.z1 + sll2int(slldiv(int2sll(y-II.y1), II.mz)));
         }
         start[1] = int2sll(y);
-        start[3] = int2sll(1);
+        start[3] = int2sll(0);  // 1);
         end[1] = int2sll(y);
-        end[3] = int2sll(1);
+        end[3] = int2sll(0);  // 1);
+#ifdef ZBUFFER
         DrawScanLine(start, end, normal, normal,
-            GOURAUD);
+          GOURAUD);
+#else
+        // TODO : Should be able to use fgDrawScanLine here eventually
+        fgDrawLine(sll2int(start[0]), sll2int(start[1]), 
+          sll2int(end[0]), sll2int(end[1]));
+#endif
 
         /** Check if the boundary lines should change */
         tempy = sll2int(scr_vertices[I.end][1]);
@@ -1023,35 +1031,29 @@ void glEnd(void) {
             sllsub(scr_vertices[II.end][0], int2sll(II.x1)));
         }
       }
-      }
-
+    } else { //Wireframe
       /** Draw black edge lines */
-      if (wireframe) {
-        //fgSetColor(0,0,0);
-        for (i=1;i<num_vertices;i++) {
-          fgDrawLine(
-            sll2int(scr_vertices[i-1][0]),
-            sll2int(scr_vertices[i-1][1]),
-            sll2int(scr_vertices[i][0]),
-            sll2int(scr_vertices[i][1]));
-        }
+      //fgSetColor(0,0,0);
+      for (i=1;i<num_vertices;i++) {
         fgDrawLine(
           sll2int(scr_vertices[i-1][0]),
           sll2int(scr_vertices[i-1][1]),
-          sll2int(scr_vertices[0][0]),
-          sll2int(scr_vertices[0][1]));
+          sll2int(scr_vertices[i][0]),
+          sll2int(scr_vertices[i][1]));
       }
-      break;
+      //Close the loop
+      fgDrawLine(
+        sll2int(scr_vertices[i-1][0]),
+        sll2int(scr_vertices[i-1][1]),
+        sll2int(scr_vertices[0][0]),
+        sll2int(scr_vertices[0][1]));
+    }
+    break;
 
-    default:
-      break;
+  default:
+    break;
   }
   num_vertices = 0;
-
-  //fgSetColor(0,0,0);
-  //fgDrawLine(0,0,160,160);
-
-
 }
 
 /**
@@ -1107,9 +1109,9 @@ void glVertex3f(GLfloat x, GLfloat y, GLfloat z) {
 
     for (i=0;i<4;i++) {
       vertices_color[num_vertices][i]
-        = cur_color[i];
+      = cur_color[i];
       vertices_normal[num_vertices][i]
-        = cur_normal[i];
+      = cur_normal[i];
     }
 
     num_vertices++;
@@ -1121,7 +1123,7 @@ void glVertex3f(GLfloat x, GLfloat y, GLfloat z) {
  *
  */
 void glVertex2f(GLfloat x, GLfloat y) {
-        glVertex3f(x, y, int2sll(0));
+  glVertex3f(x, y, int2sll(0));
 }
 
 /**
@@ -1134,37 +1136,37 @@ void glShadeModel(GLenum mode) {
  * 
  */
 void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) {
-        GLfloat t[16];
-        GLdouble theta;
+  GLfloat t[16];
+  GLdouble theta;
 
   theta = sllmul(slldiv(angle, int2sll(180)), CONST_PI);
 
-        InitializeMatrix(t);
+  InitializeMatrix(t);
 
-        if (sll2int(z) == 1) {
-                t[0] = sllcos(theta);
-                t[4] = -sllsin(theta);
-                t[1] = sllsin(theta);
-                t[5] = sllcos(theta);
-                t[10] = int2sll(1);
-                t[15] = int2sll(1);
-        } else if (sll2int(y) == 1) {
-                t[0] = sllcos(theta);
-                t[2] = -sllsin(theta);
-                t[8] = sllsin(theta);
-                t[10] = sllcos(theta);
-                t[5] = int2sll(1);
-                t[15] = int2sll(1);
-        } else if (sll2int(x) == 1) {
-                t[5] = sllcos(theta);
-                t[6] = sllsin(theta);
-                t[9] = -sllsin(theta);
-                t[10] = sllcos(theta);
-                t[0] = int2sll(1);
-                t[15] = int2sll(1);
-        }
+  if (sll2int(z) == 1) {
+    t[0] = sllcos(theta);
+    t[4] = -sllsin(theta);
+    t[1] = sllsin(theta);
+    t[5] = sllcos(theta);
+    t[10] = int2sll(1);
+    t[15] = int2sll(1);
+  } else if (sll2int(y) == 1) {
+    t[0] = sllcos(theta);
+    t[2] = -sllsin(theta);
+    t[8] = sllsin(theta);
+    t[10] = sllcos(theta);
+    t[5] = int2sll(1);
+    t[15] = int2sll(1);
+  } else if (sll2int(x) == 1) {
+    t[5] = sllcos(theta);
+    t[6] = sllsin(theta);
+    t[9] = -sllsin(theta);
+    t[10] = sllcos(theta);
+    t[0] = int2sll(1);
+    t[15] = int2sll(1);
+  }
 
-        glMultMatrixf(t);
+  glMultMatrixf(t);
 }
 
 /**
@@ -1286,15 +1288,15 @@ void glMatrixMode(GLenum mode) {
 
   matrix_mode = mode;
   switch (matrix_mode) {
-    case GL_MODELVIEW:
-      //cur_matrix = modv_matrix[modv_level];
-      break;
-    case GL_PROJECTION:
-      //cur_matrix = proj_matrix[proj_level];
-      break;
-    default:
-      break;
-      //cur_matrix = NULL;
+  case GL_MODELVIEW:
+    //cur_matrix = modv_matrix[modv_level];
+    break;
+  case GL_PROJECTION:
+    //cur_matrix = proj_matrix[proj_level];
+    break;
+  default:
+    break;
+    //cur_matrix = NULL;
   }
 
 }
@@ -1317,24 +1319,24 @@ void glEnable(GLenum cap) {
   }
 
   switch (cap) {
-    case GL_CULL_FACE:
-      culling = 1;
-      break;
-    case GL_LIGHTING:
-      lighting = 1;
-      break;
-    default:
-      break;
+  case GL_CULL_FACE:
+    culling = 1;
+    break;
+  case GL_LIGHTING:
+    lighting = 1;
+    break;
+  default:
+    break;
   }
 
 }
 
 void glDisable(GLenum cap) {
-  if (cap == GL_LIGHT0) {// && cap <= GL_LIGHT7) {
-    lights[(cap - GL_LIGHT0)].enabled = 0;
-  }
+    if (cap == GL_LIGHT0) {// && cap <= GL_LIGHT7) {
+      lights[(cap - GL_LIGHT0)].enabled = 0;
+    }
 
-  switch (cap) {
+    switch (cap) {
     case GL_CULL_FACE:
       culling = 0;
       break;
@@ -1343,118 +1345,118 @@ void glDisable(GLenum cap) {
       break;
     default:
       break;
-  }
+    }
 }
 
 /**
- * Sets an attribute of a light.  The light is identified by the GLenum light,
- * the property is selected by pname, and the values set by params.
- */
+     * Sets an attribute of a light.  The light is identified by the GLenum light,
+     * the property is selected by pname, and the values set by params.
+     */
 void glLightfv(GLenum light, GLenum pname, const GLfloat *params) {
-  int i;
+      int i;
 
 
-  if (params == NULL)
-    return;
+      if (params == NULL)
+        return;
 
-  if (light > GL_LIGHT7 || light < GL_LIGHT0)
-    return;
+      if (light > GL_LIGHT7 || light < GL_LIGHT0)
+        return;
 
-  switch(pname) {
-    case GL_AMBIENT:
-      for (i=0;i<NUM_LIGHTS;i++) {
-        lights[light-GL_LIGHT0].ambient[i] = params[i];
+      switch(pname) {
+      case GL_AMBIENT:
+        for (i=0;i<NUM_LIGHTS;i++) {
+          lights[light-GL_LIGHT0].ambient[i] = params[i];
+        }
+        break;
+      case GL_DIFFUSE:
+        for (i=0;i<NUM_LIGHTS;i++) {
+          lights[light-GL_LIGHT0].diffuse[i] = params[i];
+        }
+        break;
+      case GL_SPECULAR:
+        for (i=0;i<NUM_LIGHTS;i++) {
+          lights[light-GL_LIGHT0].specular[i]= params[i];
+        }
+        break;
+      case GL_POSITION:
+        for (i=0;i<NUM_LIGHTS;i++) {
+          lights[light-GL_LIGHT0].position[i]= params[i];
+        }
+        break;
+      default:
+        break;
       }
-      break;
-    case GL_DIFFUSE:
-      for (i=0;i<NUM_LIGHTS;i++) {
-        lights[light-GL_LIGHT0].diffuse[i] = params[i];
-      }
-      break;
-    case GL_SPECULAR:
-      for (i=0;i<NUM_LIGHTS;i++) {
-        lights[light-GL_LIGHT0].specular[i]= params[i];
-      }
-      break;
-    case GL_POSITION:
-      for (i=0;i<NUM_LIGHTS;i++) {
-        lights[light-GL_LIGHT0].position[i]= params[i];
-      }
-      break;
-    default:
-      break;
-  }
 
 }
 
 /**
- * Sets an attribute of a light.  The light is identified by the GLenum light,
- * the property is selected by pname, and the values set by params.
- */
+     * Sets an attribute of a light.  The light is identified by the GLenum light,
+     * the property is selected by pname, and the values set by params.
+     */
 void glGetLightfv(GLenum light, GLenum pname, GLfloat *params) {
-  int i;
+      int i;
 
 
-  if (params == NULL)
-    return;
+      if (params == NULL)
+        return;
 
-  if (light > GL_LIGHT7 || light < GL_LIGHT0)
-    return;
+      if (light > GL_LIGHT7 || light < GL_LIGHT0)
+        return;
 
-  switch(pname) {
-    case GL_AMBIENT:
-      for (i=0;i<NUM_LIGHTS;i++) {
-        params[i] = lights[light-GL_LIGHT0].ambient[i];
+      switch(pname) {
+      case GL_AMBIENT:
+        for (i=0;i<NUM_LIGHTS;i++) {
+          params[i] = lights[light-GL_LIGHT0].ambient[i];
+        }
+        break;
+      case GL_DIFFUSE:
+        for (i=0;i<NUM_LIGHTS;i++) {
+          params[i] = lights[light-GL_LIGHT0].diffuse[i];
+        }
+        break;
+      case GL_SPECULAR:
+        for (i=0;i<NUM_LIGHTS;i++) {
+          params[i] = lights[light-GL_LIGHT0].specular[i];
+        }
+        break;
+      case GL_POSITION:
+        for (i=0;i<NUM_LIGHTS;i++) {
+          params[i] = lights[light-GL_LIGHT0].position[i];
+        }
+        break;
+      default:
+        break;
       }
-      break;
-    case GL_DIFFUSE:
-      for (i=0;i<NUM_LIGHTS;i++) {
-        params[i] = lights[light-GL_LIGHT0].diffuse[i];
-      }
-      break;
-    case GL_SPECULAR:
-      for (i=0;i<NUM_LIGHTS;i++) {
-        params[i] = lights[light-GL_LIGHT0].specular[i];
-      }
-      break;
-    case GL_POSITION:
-      for (i=0;i<NUM_LIGHTS;i++) {
-        params[i] = lights[light-GL_LIGHT0].position[i];
-      }
-      break;
-    default:
-      break;
-  }
 
 }
 
 /**
- *
- */
+     *
+     */
 void glPolygonMode(GLenum face, GLenum mode) {
 
 
-  if (mode == GL_FILL)
-    wireframe = 0;
-  else if (mode == GL_LINE)
-    wireframe = 1;
+      if (mode == GL_FILL)
+        wireframe = 0;
+      else if (mode == GL_LINE)
+        wireframe = 1;
 
 }
 
 void glMap2f(GLenum target,
-                        GLfloat u1, GLfloat u2, GLint ustride, GLint uorder,
-                        GLfloat v1, GLfloat v2, GLint vstride, GLint vorder,
-                        const GLfloat *points ) {
-  // nothing here yet.
+      GLfloat u1, GLfloat u2, GLint ustride, GLint uorder,
+      GLfloat v1, GLfloat v2, GLint vstride, GLint vorder,
+      const GLfloat *points ) {
+      // nothing here yet.
 }
 
 void glMapGrid2f(GLint un, GLfloat u1, GLfloat u2,
-                        GLint vn, GLfloat v1, GLfloat v2 ) {
-  // nothing here yet.
+      GLint vn, GLfloat v1, GLfloat v2 ) {
+      // nothing here yet.
 }
 
 void glEvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2) {
-  // nothing here yet.
+      // nothing here yet.
 }
 
 void glPushAttrib(GLbitfield mask) {
@@ -1466,13 +1468,13 @@ void glPopAttrib(void) {
 }
 
 void glDrawPixels(GLsizei width, GLsizei height, GLenum format,
-                        GLenum type, const GLvoid *pixels) {
+    GLenum type, const GLvoid *pixels) {
   // nothing here yet.
 }
 
 void glBitmap(GLsizei width, GLsizei height, GLfloat xbo,
-                        GLfloat ybo, GLfloat xbi, GLfloat ybi,
-                        const GLubyte *bitmap) {
+    GLfloat ybo, GLfloat xbi, GLfloat ybi,
+    const GLubyte *bitmap) {
   // nothing here yet.
 }
 

@@ -52,8 +52,6 @@ typedef int Err;
 
 extern uint32_t miniGLLibRef;
 
-#define MAX_SCREEN_WIDTH        144
-#define MAX_SCREEN_HEIGHT       168
 #define MAX_VERTICES            6 //30
 #define PI                      3.1415926
 #define GOURAUD                 0x450

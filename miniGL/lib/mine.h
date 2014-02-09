@@ -1,8 +1,9 @@
 #include <inttypes.h>
+#include <stdbool.h>
 
 void gl_init(void);
 
-void gl_drawframe(uint8_t* model);
+void gl_drawframe(uint8_t* model, bool wireframe);
 
 struct stl_data {
   float normal[3];
