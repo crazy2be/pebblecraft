@@ -25,15 +25,8 @@
 #pragma GCC diagnostic warning "-Wmaybe-uninitialized"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-#ifdef DESKTOP
-#include <stdio.h>
-#else
-#define printf(...)
-#endif
-
 #include "miniGL.h" //pulls in sllmath for GLfloat GLdouble
-#include "fastgraph.h"
-//#include "fastmath.h"
+#include "draw2d.h"
 #include <stdint.h>
 
 #define W 1 //used for integer calcs
@@ -282,7 +275,7 @@ void glLoadIdentity(void) {
  * Doesn't do anything right now since there are no colors.
  */
 void glClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
-  fgClearColor(
+  d2d_ClearColor(
     int2sll(sllmul(red, 255)),
     int2sll(sllmul(green, 255)),
     int2sll(sllmul(blue, 255)));
@@ -322,7 +315,7 @@ void glClear(GLbitfield mask) {
   if (mask != GL_COLOR)
     return; /** anything else not supported now */
 
-  fgClearWindow(screen_startx, screen_starty,
+  d2d_ClearWindow(screen_startx, screen_starty,
     screen_width, screen_height);
 }
 
@@ -340,7 +333,7 @@ void glColor3f(GLfloat r, GLfloat g, GLfloat b) {
   cur_color[2] = sllmul(b, int2sll(255));
   cur_color[3] = int2sll(255);
 
-  fgSetColor(sll2int(cur_color[0]), sll2int(cur_color[1]), sll2int(cur_color[2]));
+  d2d_SetColor(sll2int(cur_color[0]), sll2int(cur_color[1]), sll2int(cur_color[2]));
 }
 
 /**
@@ -358,7 +351,7 @@ void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
   cur_color[2] = sllmul(b, int2sll(255));
   cur_color[3] = sllmul(a, int2sll(255));
 
-  fgSetColor(sll2int(cur_color[0]), sll2int(cur_color[1]), sll2int(cur_color[2]));
+  d2d_SetColor(sll2int(cur_color[0]), sll2int(cur_color[1]), sll2int(cur_color[2]));
 }
 
 /**
@@ -549,14 +542,8 @@ void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
     VectorMinusVector(lights[i].position,
       pos, blaa);
 
-//    printf("normal(%f,%f,%f,%f)\nblaa(%f,%f,%f,%f)\n",
-//      normal[0], normal[1], normal[2], normal[3], 
-//      blaa[0], blaa[1], blaa[2], blaa[3]);
     VectorNormalize(normal);
     VectorNormalize(blaa);
-//    printf("normal(%f,%f,%f,%f)\nblaa(%f,%f,%f,%f)\n",
-//      normal[0], normal[1], normal[2], normal[3], 
-//      blaa[0], blaa[1], blaa[2], blaa[3]);
     cosangle = VectorDotVector(normal, blaa);
     if (cosangle < int2sll(0)) {
       color1->r = sll2int(sllmul(cur_color[0], lights[i].ambient[0]));
@@ -576,9 +563,6 @@ void DoLightingCalc(GLfloat pos[4], GLfloat normal[4],
           slladd(lights[i].ambient[2],
             sllmul(lights[i].diffuse[2], cosangle))));
     }
-    //printf("light_r:%d light_g:%d light_b:%d\n",color1->r,color1->g,color1->b);
-    //printf(" ambient:%f diffuse:%f cosangle:%f\n",
-    //  lights[0].ambient[0], lights[0].diffuse[0], cosangle);
   }
 
 }
@@ -636,22 +620,22 @@ void DrawScanLine(GLfloat *start, GLfloat *end, GLfloat *startnormal,
       + (1-(j-startval)/(endval-startval))*color1.b;
     }
 
-    fgSetColor(color.r, color.g, color.b);
+    d2d_SetColor(color.r, color.g, color.b);
     // if (z bidness)
     //  do stuff
 
-    fgDrawPixel(j,sll2int(start[1]));
+    d2d_DrawPixel(j,sll2int(start[1]));
   }
 #else
   /** Just draw the 2D scan line */
-  fgDrawLine(
+  d2d_DrawLine(
     sll2int(start[0]), sll2int(start[1]), 
     sll2int(end[0]), sll2int(end[1]));
 #endif
 }
 
 void SetColor() {
-  fgSetColor(sll2int(cur_color[0]), sll2int(cur_color[1]), sll2int(cur_color[2]));
+  d2d_SetColor(sll2int(cur_color[0]), sll2int(cur_color[1]), sll2int(cur_color[2]));
 }
 
 void TransformToScreen(const GLfloat* in, GLfloat* ret) {
@@ -746,13 +730,13 @@ void glEnd(void) {
     while ((j+2) < num_vertices) {
       if (culling && !BackFacing(j,j+1,j+2)) {
         for (o=j+1;o<(j+3);o++) {
-          fgDrawLine(
+          d2d_DrawLine(
             sll2int(scr_vertices[o-1][0]),
             sll2int(scr_vertices[o-1][1]),
             sll2int(scr_vertices[o][0]),
             sll2int(scr_vertices[o][1]));
         }
-        fgDrawLine(
+        d2d_DrawLine(
           sll2int(scr_vertices[o-1][0]),
           sll2int(scr_vertices[o-1][1]),
           sll2int(scr_vertices[j][0]),
@@ -769,7 +753,7 @@ void glEnd(void) {
     SetColor();
 
     /** Draw first line between verts 0 and 1 */
-    fgDrawLine(
+    d2d_DrawLine(
       sll2int(scr_vertices[0][0]),
       sll2int(scr_vertices[0][1]),
       sll2int(scr_vertices[1][0]),
@@ -781,12 +765,12 @@ void glEnd(void) {
     /** For each new vertex, draw two new triangle legs */
     while (o < num_vertices) {
 
-      fgDrawLine(
+      d2d_DrawLine(
         sll2int(scr_vertices[o][0]),
         sll2int(scr_vertices[o][1]),
         sll2int(scr_vertices[o-1][0]),
         sll2int(scr_vertices[o-1][1]));
-      fgDrawLine(
+      d2d_DrawLine(
         sll2int(scr_vertices[o][0]),
         sll2int(scr_vertices[o][1]),
         sll2int(scr_vertices[o-2][0]),
@@ -804,12 +788,12 @@ void glEnd(void) {
 
     for(i=1; i < num_vertices; i++) {
       if (culling && !BackFacing(0,i-1,i)) {
-        fgDrawLine(
+        d2d_DrawLine(
           sll2int(scr_vertices[0][0]),
           sll2int(scr_vertices[0][1]),
           sll2int(scr_vertices[0][2]),
           sll2int(scr_vertices[i][1]));
-        fgDrawLine(
+        d2d_DrawLine(
           sll2int(scr_vertices[i-1][0]),
           sll2int(scr_vertices[i-1][1]),
           sll2int(scr_vertices[i][0]),
@@ -831,13 +815,13 @@ void glEnd(void) {
 
         // draw bidness with j, j+1, j+2, j+3 vertices
         for (o=j+1;o<(j+4);o++) {
-          fgDrawLine(
+          d2d_DrawLine(
             sll2int(scr_vertices[o-1][0]),
             sll2int(scr_vertices[o-1][1]),
             sll2int(scr_vertices[o][0]),
             sll2int(scr_vertices[o][1]));
         }
-        fgDrawLine(
+        d2d_DrawLine(
           sll2int(scr_vertices[o-1][0]),
           sll2int(scr_vertices[o-1][1]),
           sll2int(scr_vertices[j][0]),
@@ -860,14 +844,14 @@ void glEnd(void) {
       break;
 
     for(i=1; i < num_vertices; i++) {
-      fgDrawLine(
+      d2d_DrawLine(
         sll2int(scr_vertices[i-1][0]),
         sll2int(scr_vertices[i-1][1]),
         sll2int(scr_vertices[i][0]),
         sll2int(scr_vertices[i][1]));
     }
     /** Close the loop */
-    fgDrawLine(
+    d2d_DrawLine(
       sll2int(scr_vertices[i-1][0]),
       sll2int(scr_vertices[i-1][1]),
       sll2int(scr_vertices[0][0]),
@@ -881,7 +865,7 @@ void glEnd(void) {
       break;
 
     for(i=1; i < num_vertices; i+=2) {
-      fgDrawLine(
+      d2d_DrawLine(
         sll2int(scr_vertices[i-1][0]),
         sll2int(scr_vertices[i-1][1]),
         sll2int(scr_vertices[i][0]),
@@ -893,7 +877,7 @@ void glEnd(void) {
     SetColor();
 
     for(i=0; i < num_vertices; i++) {
-      fgDrawLine(
+      d2d_DrawLine(
         sll2int(scr_vertices[i][0]),
         sll2int(scr_vertices[i][1]),
         sll2int(scr_vertices[i][0]),
@@ -905,7 +889,7 @@ void glEnd(void) {
     SetColor();
 
     for(i=1; i < num_vertices; i++) {
-      fgDrawLine(
+      d2d_DrawLine(
         sll2int(scr_vertices[i-1][0]),
         sll2int(scr_vertices[i-1][1]),
         sll2int(scr_vertices[i][0]),
@@ -933,7 +917,7 @@ void glEnd(void) {
       /** lighting calculation to get color */
       if(lighting){
         DoLightingCalc(vertices[0], normal, &color1);
-        fgSetColor(color1.r, color1.g, color1.b);
+        d2d_SetColor(color1.r, color1.g, color1.b);
       }
 
       /** find "highest" and "lowest" points in y dir */
@@ -1000,8 +984,8 @@ void glEnd(void) {
         DrawScanLine(start, end, normal, normal,
           GOURAUD);
 #else
-        // TODO : Should be able to use fgDrawScanLine here eventually
-        fgDrawLine(sll2int(start[0]), sll2int(start[1]), 
+        // TODO : Should be able to use d2d_DrawScanLine here eventually
+        d2d_DrawLine(sll2int(start[0]), sll2int(start[1]), 
           sll2int(end[0]), sll2int(end[1]));
 #endif
 
@@ -1033,16 +1017,16 @@ void glEnd(void) {
       }
     } else { //Wireframe
       /** Draw black edge lines */
-      //fgSetColor(0,0,0);
+      //d2d_SetColor(0,0,0);
       for (i=1;i<num_vertices;i++) {
-        fgDrawLine(
+        d2d_DrawLine(
           sll2int(scr_vertices[i-1][0]),
           sll2int(scr_vertices[i-1][1]),
           sll2int(scr_vertices[i][0]),
           sll2int(scr_vertices[i][1]));
       }
       //Close the loop
-      fgDrawLine(
+      d2d_DrawLine(
         sll2int(scr_vertices[i-1][0]),
         sll2int(scr_vertices[i-1][1]),
         sll2int(scr_vertices[0][0]),

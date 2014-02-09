@@ -1,6 +1,7 @@
-#include "fastgraph.h"
 #include <stdint.h>
 #include <string.h>
+
+#include "draw2d.h"
 
 #define MIN(a, b) \
   ((a) < (b)) ? (a) : (b)
@@ -36,7 +37,7 @@ static void draw_pixel(int32_t x0, int32_t y0) {
 }
 
 
-void fgDrawLine(int x0, int y0, int x1, int y1) { 
+void d2d_DrawLine(int x0, int y0, int x1, int y1) { 
   // compute difference between start and end
   int dx = ABS(x1 - x0);
   int dy = ABS(y1 - y0);
@@ -80,7 +81,7 @@ void fgDrawLine(int x0, int y0, int x1, int y1) {
 //y0 and y1 guaranteed to be the same, so no need for stepping
 //no need for clipping if we test and bound
 // TODO: need some more work, start or end pixel not aligned
-void fgDrawScanLine(int x0, int y0, int x1, int y1) { 
+void d2d_DrawScanLine(int x0, int y0, int x1, int y1) { 
   if (y0 >= FRAMEBUFFER_HEIGHT || y0 < 0) return;
 
   if (x0 > x1) swap_points(&x0, &x1);
@@ -97,7 +98,7 @@ void fgDrawScanLine(int x0, int y0, int x1, int y1) {
  * use the global greyscale mode to determine how to best map and set the 
  * color.
  */
-void fgSetColor(int r, int g, int b) {
+void d2d_SetColor(int r, int g, int b) {
   //current_color = (r+r+r+b+g+g+g+g)>>3; //Fast Luminosity 8-bit
   current_color = (r+r+r+b+g+g+g+g)>>6; //Fast Luminosity 4-bit
 }
@@ -106,18 +107,18 @@ void fgSetColor(int r, int g, int b) {
  * Using the current greyscale mode, draws a pixel on the screen using the 
  * current color.
  */
-void fgDrawPixel(int x0, int y0) {
+void d2d_DrawPixel(int x0, int y0) {
   //if (CHECK_CLIP(x0, y0)) {
     draw_pixel( x0, y0 );
   //}
 }
 
-void fgClearColor(int r, int g, int b){
+void d2d_ClearColor(int r, int g, int b){
   //current_color = (r+r+r+b+g+g+g+g)>>3; //Fast Luminosity 8-bit
   clear_color = (r+r+r+b+g+g+g+g)>>6; //Fast Luminosity 4-bit
 }
 
-void fgClearWindow(int sx, int sy, int w, int h) {
+void d2d_ClearWindow(int sx, int sy, int w, int h) {
   //fast char aligned memset
   uint32_t clearvalue = clear_color << 4 | clear_color;
   memset( framebuffer, clearvalue, sizeof(framebuffer));
