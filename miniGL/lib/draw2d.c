@@ -3,6 +3,9 @@
 
 #include "draw2d.h"
 
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
+
 #define MIN(a, b) \
   ((a) < (b)) ? (a) : (b)
 #define MAX(a, b) \
@@ -122,6 +125,7 @@ void d2d_ClearWindow(int sx, int sy, int w, int h) {
   //fast char aligned memset
   uint32_t clearvalue = clear_color << 4 | clear_color;
   memset( framebuffer, clearvalue, sizeof(framebuffer));
+
   //if( (sx%2) && (w%2) ){
   //  for(int row = sy; row < sy+h; row++){
   //    memset( &framebuffer[ (sy*FRAMEBUFFER_WIDTH + sx) / 2 ], 0xFF, w/2 );
@@ -130,4 +134,4 @@ void d2d_ClearWindow(int sx, int sy, int w, int h) {
     //Todo
   //}
 }
-
+#pragma GCC pop_options
