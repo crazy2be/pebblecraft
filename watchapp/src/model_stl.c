@@ -15,6 +15,7 @@
   #define GL_COLOR_BUFFER_BIT GL_COLOR
 #endif
 
+
 //Evil hack for softfloat workarounds
 //__extendsfdf2 pulls in all of ieee754-df.S (about 3164 bytes)
 //vs. 140 for just extendsfdf2
@@ -34,7 +35,7 @@ void gl_init() {
 
   //Invert y here, as pebble origin is top-left, opengl is bottom-left
   glOrtho(int2sll(-72), int2sll(72), 
-    int2sll(72), int2sll(-72), int2sll(-144), int2sll(30));
+    int2sll(-72), int2sll(72), int2sll(-144), int2sll(30));
 
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
@@ -62,13 +63,22 @@ void gl_init() {
 #endif
 }
 
-void gl_drawframe(uint8_t* model, bool wireframe) {
+void gl_drawframe(uint8_t* model, bool wireframe, uint8_t rotation, bool reset) {
   glPolygonMode(GL_FRONT, (wireframe) ? GL_LINE : GL_FILL);
 
   int triangle_count = *(int*)&model[80];
   glClearColor(int2sll(0),int2sll(0),int2sll(0),int2sll(0));
   glClear(GL_COLOR_BUFFER_BIT);
-  glRotatef(int2sll(10), int2sll(1), int2sll(1), int2sll(1));
+
+  if (reset) {
+    glLoadIdentity();
+  }
+
+  if (rotation == 0) {
+    glRotatef(int2sll(-10), int2sll(1), int2sll(1), int2sll(0));
+  } else {
+    glRotatef(int2sll(-10), int2sll(1), int2sll(1), int2sll(1));
+  }
   for (int i = 0; i < triangle_count; i++){
     struct stl_data stl = *(struct stl_data*)&model[80 + 4 + i*sizeof(stl)];
 //     float red   = (   stl.color & 0x001F )        / 31.0;

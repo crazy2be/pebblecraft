@@ -12,18 +12,40 @@
     "dummy": 0
   },
   "resources": {
-    "media": [{
+    "media": [
+    {
       "type": "raw",
-      "name": "TEST_IMAGE",
-      "file": "buf.grey4"
+      "name": "MODEL_1",
+      "file": "mask.stl"
     },{
       "type": "raw",
-      "name": "TEST_IMAGE_2",
-      "file": "buf2.grey4"
+      "name": "MODEL_2",
+      "file": "batman.stl"
     },{
       "type": "raw",
-      "name": "MODEL",
-      "file": "model.stl"
-    }]
+      "name": "MODEL_3",
+      "file": "heart.stl"
+    },{
+      "type": "raw",
+      "name": "MODEL_4",
+      "file": "gear.stl"
+    },{
+      "type": "raw",
+      "name": "MODEL_5",
+      "file": "superman.stl"
+    },{
+      "type": "raw",
+      "name": "MODEL_6",
+      "file": "usb_sign.stl"
+    },{
+      "type": "raw",
+      "name": "MODEL_7",
+      "file": "apple.stl"
+    },{
+      "type": "raw",
+      "name": "MODEL_8",
+      "file": "n.stl"
+    }
+    ]
   }
 }

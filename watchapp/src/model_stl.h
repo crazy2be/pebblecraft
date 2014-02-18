@@ -3,7 +3,7 @@
 
 void gl_init(void);
 
-void gl_drawframe(uint8_t* model, bool wireframe);
+void gl_drawframe(uint8_t* model, bool wireframe, uint8_t rotation, bool reset);
 
 struct stl_data {
   float normal[3];
