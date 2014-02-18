@@ -44,6 +44,9 @@
 #define CHAR_BIT 8
 #endif
 
+#pragma GCC push_options
+#pragma GCC optimize ("O3") // Smaller than Os in this case (16 bytes)
+
 typedef float src_t;
 typedef uint32_t src_rep_t;
 #define SRC_REP_C UINT32_C
@@ -58,18 +61,17 @@ static const int dstSigBits = 52;
 // End of specialization parameters.  Two helper routines for conversion to and
 // from the representation of floating-point data as integer values follow.
 
-static inline src_rep_t srcToRep(src_t x) {
+static inline __attribute__((always_inline)) src_rep_t srcToRep(src_t x) {
     const union { src_t f; src_rep_t i; } rep = {.f = x};
     return rep.i;
-}
+} __attribute__((always_inline))
 
-static inline dst_t dstFromRep(dst_rep_t x) {
+static inline __attribute__((always_inline)) dst_t dstFromRep(dst_rep_t x) {
     const union { dst_t f; dst_rep_t i; } rep = {.i = x};
     return rep.f;
 }
 
 // End helper routines.  Conversion implementation follows.
-
 
 dst_t llvm_extendsfdf2(src_t a) {
 //dst_t __extendsfdf2(src_t a) {
@@ -140,3 +142,4 @@ dst_t llvm_extendsfdf2(src_t a) {
     const dst_rep_t result = absResult | (dst_rep_t)sign << (dstBits - srcBits);
     return dstFromRep(result);
 }
+#pragma GCC pop_options

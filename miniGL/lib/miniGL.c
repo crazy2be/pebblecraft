@@ -157,7 +157,7 @@ void VectorNormalize(GLfloat *v) {
     sllmul(v[1], v[1]),
     sllmul(v[2], v[2]),
     sllmul(v[3], v[3]));
-  GLfloat l_inv = slldiv(int2sll(1), sllsqrt(l_sqr)); // ie. (1 / l_sqr)
+  GLfloat l_inv = sllinv(sllsqrt(l_sqr)); // ie. (1 / l_sqr)
 
   v[0] = sllmul(v[0], l_inv);
   v[1] = sllmul(v[1], l_inv);
@@ -374,7 +374,7 @@ void glOrtho(GLdouble left, GLdouble right,
 
   InitializeMatrix(per_matrix);
   per_matrix[10] = int2sll(0);
-  per_matrix[11] = slldiv(int2sll(1), int2sll(32000));
+  per_matrix[11] = sllinv(int2sll(32000));
 
   InitializeMatrix(scr_matrix);
   scr_matrix[0] =  slldiv(int2sll(screen_width), width);
@@ -441,7 +441,7 @@ void gluPerspective(GLdouble fovy,
 
   InitializeMatrix(per_matrix);
   (per_matrix)[10] = int2sll(0);
-  (per_matrix)[11] = slldiv(int2sll(1), near);
+  (per_matrix)[11] = sllinv(near);
 
   InitializeMatrix(scr_matrix);
   (scr_matrix)[0] = slldiv(int2sll(screen_width), width);

@@ -52,12 +52,12 @@ typedef int Err;
 
 extern uint32_t miniGLLibRef;
 
-#define MAX_VERTICES            6 //30
+#define MAX_VERTICES            4 //30
 #define PI                      3.1415926
 #define GOURAUD                 0x450
 #define PHONG                   0x451
-#define MAX_MAT_STACK_MODV      2//32
-#define MAX_MAT_STACK_PROJ      2
+#define MAX_MAT_STACK_MODV      1//32
+#define MAX_MAT_STACK_PROJ      1
 
 /**
  * GL library defines
