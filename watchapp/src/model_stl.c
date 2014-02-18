@@ -1,31 +1,14 @@
 #include <stdlib.h>
 
 #include "model_stl.h"
-#ifdef SDL
-  #include <GL/gl.h>
-  // Using fixed point sll math library for GLfloat,GLdouble
-  // just wrapper for x86 with fixedpoint off
-  #undef USE_FIXED_POINT
-  #include "math-sll.h"
-  typedef sll GLfloat;
-  typedef sll GLdouble;
-  typedef sll GLclampf;
-#else
-  #include "miniGL/miniGL.h"
-  #define GL_COLOR_BUFFER_BIT GL_COLOR
-#endif
+#include "miniGL/miniGL.h"
+#define GL_COLOR_BUFFER_BIT GL_COLOR
 
 
 //Evil hack for softfloat workarounds
 //__extendsfdf2 pulls in all of ieee754-df.S (about 3164 bytes)
 //vs. 140 for just extendsfdf2
 extern double llvm_extendsfdf2(float a);
-
-#ifdef DESKTOP
-#include <stdio.h>
-#else
-#define printf(...)
-#endif
 
 void gl_init() {
   glViewport(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
