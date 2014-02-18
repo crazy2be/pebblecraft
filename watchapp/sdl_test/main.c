@@ -29,7 +29,7 @@ unsigned char* load_model() {
 
 
 SDL_Surface *sdl_surface;
-SDL_Surface *stretch_surface;
+SDL_Surface *cpy_surface; // 32-bit surface for copy buffer
 SDL_Surface *img_surface; // 1-bit surface
 
 //1-bit screen buffer
@@ -42,13 +42,15 @@ void sdl_setup(void) {
 
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTTHREAD);
   sdl_surface = SDL_SetVideoMode(
-    FRAMEBUFFER_WIDTH * 2, FRAMEBUFFER_HEIGHT * 2, 
-    0, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    FRAMEBUFFER_WIDTH * 3, FRAMEBUFFER_HEIGHT * 3, 
+    32, //can't use 0 (autodetect) as next surface must match 
+    SDL_HWSURFACE | SDL_DOUBLEBUF);
   SDL_ShowCursor( 0 );
 
-  stretch_surface = SDL_CreateRGBSurface( 0,
-    FRAMEBUFFER_WIDTH * 2, FRAMEBUFFER_HEIGHT * 2, 
-    1, //depth
+  //Used to convert 1-bit buffer to 32-bit buffer
+  cpy_surface = SDL_CreateRGBSurface( 0,
+    FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, 
+    32, //depth
     0, 0, 0, 0); 
 
   img_surface = SDL_CreateRGBSurfaceFrom( screenbuffer,
@@ -62,7 +64,7 @@ void sdl_setup(void) {
     exit(EXIT_FAILURE);
   }
   //Default palette was backwards, fix here
-  SDL_SetPalette(stretch_surface, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 2);
+  SDL_SetPalette(img_surface, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 2);
 }
 
 uint8_t reverse_byte(uint8_t b) {
@@ -75,11 +77,8 @@ void sdl_draw(void) {
     screenbuffer[i] = reverse_byte(screenbuffer[i]);
   }
 
-  SDL_SoftStretch(img_surface, 0, stretch_surface, 0);
-  for(int i = 0; i < 144 * 2 * 144 * 2 / 8; i++){
-   ((uint8_t*)stretch_surface->pixels)[i] = reverse_byte(((uint8_t*)stretch_surface->pixels)[i]);
-  }
-  SDL_BlitSurface(stretch_surface, NULL, sdl_surface, NULL);
+  SDL_BlitSurface(img_surface, NULL, cpy_surface, NULL);
+  SDL_SoftStretch(cpy_surface, 0, sdl_surface, 0);
   SDL_Flip(sdl_surface);
 }
 
