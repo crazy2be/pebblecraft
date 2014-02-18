@@ -1,7 +1,11 @@
 #include <inttypes.h>
 #include "dither.h"
 
-uint8_t extract_grey(uint8_t* grey, int i) {
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
+
+
+static __attribute__((always_inline)) inline uint8_t extract_grey(uint8_t* grey, int i) {
   uint8_t val;
   if (i%2 == 1) {
     val = (grey[i/2] & 0x0F) << 4;
@@ -12,7 +16,7 @@ uint8_t extract_grey(uint8_t* grey, int i) {
 }
 
 // Note: low bits are ignored.
-void set_grey(uint8_t* grey, int i, uint8_t val) {
+static __attribute__((always_inline)) inline void set_grey(uint8_t* grey, int i, uint8_t val) {
   if (i%2 == 1) {
     grey[i/2] = (grey[i/2] & 0xF0) | (val >> 4);
   } else {
@@ -20,42 +24,42 @@ void set_grey(uint8_t* grey, int i, uint8_t val) {
   }
 }
 
-int clamp(int n, int a, int b) {
+static __attribute__((always_inline)) inline int clamp(int n, int a, int b) {
   return n < a ? a : n > b ? b : n;
 }
 
-void add_grey(uint8_t* grey, int i, int amount) {
+static __attribute__((always_inline)) inline void add_grey(uint8_t* grey, int i, int amount) {
   uint8_t val = extract_grey(grey, i);
   set_grey(grey, i, clamp(val + amount, 0, 255));
 }
 
-void set_black(uint8_t* bw, int i) {
-  bw[i/8] |= 1 << i%8;
-}
-
-void set_white(uint8_t* bw, int i) {
+static __attribute__((always_inline)) inline void set_black(uint8_t* bw, int i) {
   bw[i/8] &= ~(1 << i%8);
 }
 
-void set_bw(uint8_t* bw, int i, uint8_t val) {
-  if (val > 127) {
-    set_black(bw, i);
-  } else {
-    set_white(bw, i);
-  }
+static __attribute__((always_inline)) inline void set_white(uint8_t* bw, int i) {
+  bw[i/8] |= 1 << i%8;
 }
 
-void naive_dither(uint8_t* grey, uint8_t* bw, int num_pixels) {
+static __attribute__((always_inline)) inline void set_bw(uint8_t* bw, int i, uint8_t val) {
+  if (val > 127) {
+    set_white(bw, i);
+  } //else {
+   // set_black(bw, i); 
+ // }
+}
+
+static __attribute__((always_inline)) inline void naive_dither(uint8_t* grey, uint8_t* bw, int num_pixels) {
   for (int i = 0; i < num_pixels; i++) {
     set_bw(bw, i, extract_grey(grey, i));
   }
 }
 
-int index_bw(int x, int y) {
+static __attribute__((always_inline)) inline int index_bw(int x, int y) {
   return x*160 + y;
 }
 
-int index(int x, int y) {
+static __attribute__((always_inline)) inline int index(int x, int y) {
   return x*144 + y;
 }
 
@@ -63,6 +67,7 @@ int index(int x, int y) {
 void floyd_steinberg_dither(uint8_t* grey, uint8_t* bw, int num_pixels) {
   int w = 144;
   int h = 144;
+  memset(bw, 0, w * h / 8);//clear to black
   //lets move the screen down a bit (24 lines)
   //bw += (160 * 24) / 8;
   for (int y = 0; y < h; y++) {
@@ -79,3 +84,4 @@ void floyd_steinberg_dither(uint8_t* grey, uint8_t* bw, int num_pixels) {
     }
   }
 }
+#pragma GCC pop_options
